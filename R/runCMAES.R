@@ -74,6 +74,7 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 
 	# path for covariance matrix C and stepsize sigma
 	path.c = path.sigma = rep(0, n)
+	B = diag(n)
 	D = diag(n)
 	C = diag(n)
 	C.inv = diag(n)
@@ -84,10 +85,24 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 	# best individual
 	best = Inf
 
+	## INITIALIZE BOOKKEEPING VARIABLES
+	fitness = numeric(lambda)
+	population = matrix(0, nrow = lambda, ncol = n)
+	x.mean = start.point
+
 	iter = 1L
 	repeat {
 		catf("Starting iteration %i.", iter)
 
+		#FIXME: this is ugly as sin
+		for (i in 1:lambda) {
+			population[i, ] = rnorm(n)
+			population[i, ] = x.mean + sigma * (B %*% D %*% population[i, ])
+			fitness[i] = objective.fun(population[i, ])
+			count.eval = count.eval + 1L
+		}
+
+		#FIXME: write helpers getTerminationCode, getTerminationMessage
 		if (iter >= max.iter)
 			break
 		iter = iter + 1L

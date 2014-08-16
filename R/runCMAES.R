@@ -20,7 +20,7 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 
 	# extract relevant data
 	par.set = getParamSet(objective.fun)
-	n.params = getNumberOfParameters(objective.fun)
+	n = getNumberOfParameters(objective.fun)
 
 	# sanity checks
 	if (isNoisy(objective.fun)) {
@@ -35,15 +35,16 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 		stopf("CMA-ES can only handle single-objective functions.")
 	}
 
-	assertNumeric(start.point, len = n.params, any.missing = FALSE)
+	assertNumeric(start.point, len = n, any.missing = FALSE)
 	assertNumber(sigma, lower = 0L, finite = TRUE)
+	assertCount(max.iter, positive = TRUE)
+
+	## SELECTION AN RECOMBINATION
 	if (is.null(population.size)) {
-		population.size = 4L + floor(3 * log(n.params))
+		population.size = 4L + floor(3 * log(n))
 	} else {		
 		assertInt(population, lower = 4L)	
 	}
-
-	assertCount(max.iter, positive = TRUE)
 
 	# offspring size
 	lambda = population.size
@@ -57,8 +58,31 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 	# normalize weight vector
 	weights = weights / sum(weights)
 
-	# variance-effectiveness of sum w_i x_i
-	mueff = sum(weights)^2 / sum(weights^2)
+	# variance-effectiveness / variance effective selection mass of sum w_i x_i
+	mu.eff = 1 / sum(weights^2)
+
+
+	## STEP-SIZE CONTROL
+	c.sigma = (me.eff + 2) / (n + mu.eff + 5)
+	d.sigma = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1))) + c.sigma
+
+	## COVARIANCE MATRIX ADAPTION
+	c.c = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
+	c.1 = 2 / ((n + 1.3)^2 + mu.eff)
+	alpha.mu = 2L
+	c.mu = min(1 - c.1, alpha.mu * (mu.eff - 2 + 1/mu.eff) / ((n + 2)^2 + alpha.mu * mu.eff / 2))
+
+	# path for covariance matrix C and stepsize sigma
+	path.c = path.sigma = rep(0, n)
+	D = diag(n)
+	C = diag(n)
+	C.inv = diag(n)
+
+	eigen.eval = 0L
+	count.eval = 0L
+
+	# best individual
+	best = Inf
 
 	iter = 1L
 	repeat {

@@ -77,30 +77,85 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 	B = diag(n)
 	D = diag(n)
 	C = diag(n)
-	C.inv = diag(n)
+	C.invsqrt = diag(n)
+	chi.n = sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n^2))
 
 	eigen.eval = 0L
 	count.eval = 0L
 
 	# best individual
-	best = Inf
+	best.param = rep(NA, n)
+	best.fitness = Inf
 
 	## INITIALIZE BOOKKEEPING VARIABLES
 	fitness = numeric(lambda)
 	population = matrix(0, nrow = lambda, ncol = n)
 	x.mean = start.point
 
+	## HELPERS
+	doPlot = function(population) {
+		ggdata = as.data.frame(population)
+		colnames(ggdata) = c("x1", "x2")
+		pl = ggplot(ggdata, aes(x = x1, y = x2)) + geom_point()
+		pl = pl + xlim(-5, 5) + ylim(-5, 5)
+		print(pl)
+		pause()
+	}
+
 	iter = 1L
+	#FIXME: move to depends
+	library(mvtnorm)
+
 	repeat {
 		catf("Starting iteration %i.", iter)
 
 		#FIXME: this is ugly as sin
+
+		y = matrix(0, nrow = lambda, ncol = n)
+
 		for (i in 1:lambda) {
-			population[i, ] = rnorm(n)
-			population[i, ] = x.mean + sigma * (B %*% D %*% population[i, ])
+			y[i, ] = B %*% D %*% t(rmvnorm(n = 1, sigma = diag(n)))
+			population[i, ] = x.mean + sigma * y[i, ]
 			fitness[i] = objective.fun(population[i, ])
 			count.eval = count.eval + 1L
 		}
+
+		print(population)
+		print(fitness)
+
+		fitness.order = order(fitness)
+		x.mean = colSums(population[fitness.order[1:mu], ] * weights)
+
+		#FIXME: ugly
+		y.w = colSums(y[fitness.order[1:mu], ] * weights)
+		print(y.w)
+
+		best.param = population[fitness.order[1]]
+		best.fitness = fitness[fitness.order[1]]
+
+
+		# Update evolution path
+		path.sigma = (1 - c.sigma) * path.sigma + sqrt(c.sigma * (2 - c.sigma) * mu.eff) * C.invsqrt %*% y.w
+		h.sigma = sum(path.sigma) / sqrt(1 - (1 - c.sigma)^(2*(iter + 1))) < chi.n * (1.4 + 2 / (n + 1))
+		path.sigma.norm = sqrt(sum(path.sigma^2))
+		sigma = sigma * exp(c.sigma / d.sigma * ((path.sigma.norm / chi.n) - 1))
+
+		catf("h.sigma: %i", as.integer(h.sigma))
+		catf("path.sigma norm: %f", path.sigma.norm)
+		catf("SIGMA: %f", sigma)
+
+		# Update covariance matrix
+		path.c = (1 - c.c) * path.c + h.sigma * sqrt(c.c * (2 - c.c) * mu.eff) * y.w
+		C = (1 - c.1 - c.mu) * C + c.1 * (path.c %*% t(path.c) + (1 - h.sigma) * c.sigma * (2 - c.c) * C)
+		tmp = 0
+		for (i in 1:mu) {
+			yi = y[fitness.order[i], ]
+			tmp = weights[i] * yi %*% t(yi)
+		}
+		C = C + c.mu * tmp
+		print(C)
+		doPlot(population)
+		#stop()
 
 		#FIXME: write helpers getTerminationCode, getTerminationMessage
 		if (iter >= max.iter)

@@ -43,7 +43,7 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 	if (is.null(population.size)) {
 		population.size = 4L + floor(3 * log(n))
 	} else {		
-		assertInt(population, lower = 4L)	
+		assertInt(population.size, lower = 4L)	
 	}
 
 	# offspring size
@@ -63,7 +63,7 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 
 
 	## STEP-SIZE CONTROL
-	c.sigma = (me.eff + 2) / (n + mu.eff + 5)
+	c.sigma = (mu.eff + 2) / (n + mu.eff + 5)
 	d.sigma = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1))) + c.sigma
 
 	## COVARIANCE MATRIX ADAPTION

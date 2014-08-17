@@ -98,8 +98,6 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 	x.mean = start.point
 
 	iter = 1L
-	#FIXME: move to depends
-	library(mvtnorm)
 
 	doMonitor = function(monitor, moment, ...) {
 		if (!is.null(monitor))
@@ -158,5 +156,10 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 		iter = iter + 1L
 	}
 	doMonitor(monitor, "after", iter, best.param, best.fitness)
-
+	makeS3Obj(
+		best.param = best.param,
+		best.fitness = best.fitness,
+		convergence = 0L,
+		classes = "cma_result"
+	)
 }

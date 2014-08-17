@@ -17,7 +17,7 @@
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
 #' @return [\code{CMAES_result}] Result object.
-runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, max.iter = 10L, monitor = NULL) {
+runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, max.iter = 10L, monitor = makeSimpleMonitor()) {
 	assertClass(objective.fun, "otf_function")
 
 	# extract relevant data
@@ -42,15 +42,6 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 	assertCount(max.iter, positive = TRUE)
 	if (!is.null(monitor)) {		
 		assertClass(monitor, "cma_monitor")	
-	} else {
-		simpleMonitor = makeMonitor(
-			before = function(...) catf("Starting optimization."),
-			step = function(iter, best.param, best.fitness) {
-				catf("Iteration %i: x1 = %f, x2 = %f, y = %f", iter, best.param[1], best.param[2], best.fitness)
-			},
-			after = function(...) catf("Optimization terminated.")
-		)
-		monitor = simpleMonitor
 	}
 
 	## SELECTION AN RECOMBINATION
@@ -158,7 +149,7 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 			tmp = weights[i] * yi %*% t(yi)
 		}
 		C = C + c.mu * tmp
-		print(best.param)
+
 		doMonitor(monitor, "step", iter, best.param, best.fitness)
 		
 		#FIXME: write helpers getTerminationCode, getTerminationMessage

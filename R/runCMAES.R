@@ -14,8 +14,10 @@
 #'   Initial step-size, i. e., standard deviation in each coordinate direction.
 #' @param max.iter [\code{integer(1)}]\cr
 #'   Maximal number of sequential iterations.
+#' @param monitor [\code{cma_monitor}]\cr
+#'   Monitoring object.
 #' @return [\code{CMAES_result}] Result object.
-runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, max.iter = 10L) {
+runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, max.iter = 10L, monitor = NULL) {
 	assertClass(objective.fun, "otf_function")
 
 	# extract relevant data
@@ -38,6 +40,18 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 	assertNumeric(start.point, len = n, any.missing = FALSE)
 	assertNumber(sigma, lower = 0L, finite = TRUE)
 	assertCount(max.iter, positive = TRUE)
+	if (!is.null(monitor)) {		
+		assertClass(monitor, "cma_monitor")	
+	} else {
+		simpleMonitor = makeMonitor(
+			before = function(...) catf("Starting optimization."),
+			step = function(iter, best.param, best.fitness) {
+				catf("Iteration %i: x1 = %f, x2 = %f, y = %f", iter, best.param[1], best.param[2], best.fitness)
+			},
+			after = function(...) catf("Optimization terminated.")
+		)
+		monitor = simpleMonitor
+	}
 
 	## SELECTION AN RECOMBINATION
 	if (is.null(population.size)) {
@@ -92,23 +106,18 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 	population = matrix(0, nrow = lambda, ncol = n)
 	x.mean = start.point
 
-	## HELPERS
-	doPlot = function(population) {
-		ggdata = as.data.frame(population)
-		colnames(ggdata) = c("x1", "x2")
-		pl = ggplot(ggdata, aes(x = x1, y = x2)) + geom_point()
-		pl = pl + xlim(-5, 5) + ylim(-5, 5)
-		print(pl)
-		pause()
-	}
-
 	iter = 1L
 	#FIXME: move to depends
 	library(mvtnorm)
 
-	repeat {
-		catf("Starting iteration %i.", iter)
+	doMonitor = function(monitor, moment, ...) {
+		if (!is.null(monitor))
+			monitor[[moment]](...)
+	}
 
+	doMonitor(monitor, "before", iter, best.param, best.fitness)
+
+	repeat {
 		#FIXME: this is ugly as sin
 
 		y = matrix(0, nrow = lambda, ncol = n)
@@ -120,17 +129,13 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 			count.eval = count.eval + 1L
 		}
 
-		print(population)
-		print(fitness)
-
 		fitness.order = order(fitness)
 		x.mean = colSums(population[fitness.order[1:mu], ] * weights)
 
 		#FIXME: ugly
 		y.w = colSums(y[fitness.order[1:mu], ] * weights)
-		print(y.w)
 
-		best.param = population[fitness.order[1]]
+		best.param = population[fitness.order[1], ]
 		best.fitness = fitness[fitness.order[1]]
 
 
@@ -140,9 +145,9 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 		path.sigma.norm = sqrt(sum(path.sigma^2))
 		sigma = sigma * exp(c.sigma / d.sigma * ((path.sigma.norm / chi.n) - 1))
 
-		catf("h.sigma: %i", as.integer(h.sigma))
-		catf("path.sigma norm: %f", path.sigma.norm)
-		catf("SIGMA: %f", sigma)
+		# catf("h.sigma: %i", as.integer(h.sigma))
+		# catf("path.sigma norm: %f", path.sigma.norm)
+		# catf("SIGMA: %f", sigma)
 
 		# Update covariance matrix
 		path.c = (1 - c.c) * path.c + h.sigma * sqrt(c.c * (2 - c.c) * mu.eff) * y.w
@@ -153,14 +158,14 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 			tmp = weights[i] * yi %*% t(yi)
 		}
 		C = C + c.mu * tmp
-		print(C)
-		doPlot(population)
-		#stop()
-
+		print(best.param)
+		doMonitor(monitor, "step", iter, best.param, best.fitness)
+		
 		#FIXME: write helpers getTerminationCode, getTerminationMessage
 		if (iter >= max.iter)
 			break
 		iter = iter + 1L
 	}
+	doMonitor(monitor, "after", iter, best.param, best.fitness)
 
 }

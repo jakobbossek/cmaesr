@@ -117,7 +117,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 	chi.n = sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n^2))
 
 	eigen.eval = 0L
-	count.eval = 0L
+	n.evals = 0L
 
 	# best individual
 	best.param = rep(NA, n)
@@ -143,7 +143,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 			population[i, ] = x.mean + sigma * y[i, ]
 			fitness[i] = objective.fun(population[i, ])
 		}
-		count.eval = count.eval + lambda
+		n.evals = n.evals + lambda
 
 		fitness.order = order(fitness)
 		x.mean = colSums(population[fitness.order[1:mu], ] * weights)
@@ -178,7 +178,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 		doMonitor(monitor, "step", iter, best.param, best.fitness, population)
 		
 		# check if we have to stop
-		termination.code = getTerminationCode(iter, max.iter, count.eval, max.evals, start.time, max.time)
+		termination.code = getTerminationCode(iter, max.iter, n.evals, max.evals, start.time, max.time)
 		if (termination.code > -1L) {
 			break
 		}
@@ -186,12 +186,30 @@ runCMAES = function(objective.fun, start.point = NULL,
 	}
 	doMonitor(monitor, "after", iter, best.param, best.fitness)
 	makeS3Obj(
+		par.set = par.set,
 		best.param = best.param,
 		best.fitness = best.fitness,
 		convergence = termination.code,
+		n.evals = n.evals,
+		past.time = as.integer(difftime(Sys.time(), start.time, units = "secs")),
+		n.iters = iter - 1L,
 		message = getTerminationMessage(termination.code),
 		classes = "cma_result"
 	)
+}
+
+#' @export
+print.cma_result = function(x, ...) {
+	par.set = x$par.set
+	par.names = getParamIds(par.set, repeated = TRUE, with.nr = TRUE)
+	best.param = as.list(x$best.param)
+	names(best.param) = par.names
+	catf("Best parameter      : %s", paramValueToString(par.set, best.param))
+	catf("Best fitness value  : %.6g", x$best.fitness)
+	catf("Termination         : %s", x$message)
+	catf("  #Iterations       : %i", x$n.iters)
+	catf("  #Evaluations      : %i", x$n.evals)
+	catf("  Time (in seconds) : %i", x$past.time)
 }
 
 getTerminationCode = function(iter, max.iter, count.evals, max.evals, start.time, max.time) {

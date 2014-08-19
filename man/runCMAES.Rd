@@ -3,7 +3,7 @@
 \alias{runCMAES}
 \title{Covariance-Matrix-Adaption}
 \usage{
-runCMAES(objective.fun, start.point, population.size = NULL, sigma,
+runCMAES(objective.fun, start.point = NULL, population.size = NULL, sigma,
   max.iter = 10L, monitor = makeSimpleMonitor())
 }
 \arguments{
@@ -12,7 +12,8 @@ Numerical objective function of type \code{\link[otf]{otf_function}}. The functi
 must expect a list of numerical values and return a scaler numerical value.}
 
 \item{start.point}{[\code{numeric}]\cr
-Initial solution vector.}
+Initial solution vector. If \code{NULL}, one is generated randomly within the
+box constraints offered by the paramter set of the objective function.}
 
 \item{population.size}{[\code{integer(1)}]\cr
 Population size.}

@@ -38,7 +38,7 @@ makeMonitor = function(before = NULL, step = NULL, after = NULL, ...) {
 makeSimpleMonitor = function() {
 	makeMonitor(
 		before = function(...) catf("Starting optimization."),
-		step = function(iter, best.param, best.fitness) {
+		step = function(iter, best.param, best.fitness, ...) {
 			#FIXME: best.param may have more than 2 components
 			catf("Iteration %i: x1 = %f, x2 = %f, y = %f", iter, best.param[1], best.param[2], best.fitness)
 		},

@@ -7,7 +7,8 @@
 #'   Numerical objective function of type \code{\link[otf]{otf_function}}. The function
 #'   must expect a list of numerical values and return a scaler numerical value.
 #' @param start.point [\code{numeric}]\cr
-#'   Initial solution vector.
+#'   Initial solution vector. If \code{NULL}, one is generated randomly within the 
+#'   box constraints offered by the paramter set of the objective function.
 #' @param population.size [\code{integer(1)}]\cr
 #'   Population size.
 #' @param sigma [\code{numeric(1)}]\cr
@@ -17,7 +18,7 @@
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
 #' @return [\code{CMAES_result}] Result object.
-runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, max.iter = 10L, monitor = makeSimpleMonitor()) {
+runCMAES = function(objective.fun, start.point = NULL, population.size = NULL, sigma, max.iter = 10L, monitor = makeSimpleMonitor()) {
 	assertClass(objective.fun, "otf_function")
 
 	# extract relevant data
@@ -37,7 +38,14 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 		stopf("CMA-ES can only handle single-objective functions.")
 	}
 
-	assertNumeric(start.point, len = n, any.missing = FALSE)
+	if (!is.null(start.point)) {
+		assertNumeric(start.point, len = n, any.missing = FALSE)	
+	} else {
+		if (!hasFiniteBoxConstraints(par.set)) {
+			stopf("No start point provided. Cannot generate one, because parameter set cannot sample with Inf bounds!")
+		}
+		start.point = unlist(samplePoint(par.set))
+	}
 	assertNumber(sigma, lower = 0L, finite = TRUE)
 	assertCount(max.iter, positive = TRUE)
 	if (!is.null(monitor)) {		
@@ -148,7 +156,7 @@ runCMAES = function(objective.fun, start.point, population.size = NULL, sigma, m
 		}
 		C = C + c.mu * tmp
 
-		doMonitor(monitor, "step", iter, best.param, best.fitness)
+		doMonitor(monitor, "step", iter, best.param, best.fitness, population)
 		
 		#FIXME: write helpers getTerminationCode, getTerminationMessage
 		if (iter >= max.iter)

@@ -23,6 +23,12 @@
 #'   Monitoring object.
 #' @return e[\code{CMAES_result}] Result object.
 #' @export
+#FIXME: there will be many more argument in the future. Add makeCMAESControl() function.
+#FIXME: add handling of noisy functions. See Hansen et al 2009, A Method for Handling Uncertainty in Evolutionary Optimization...
+#FIXME: add restart options
+#FIXME: finish covariance matrix adaption, update of B and D
+#FIXME: move getTermination* to dedicated files
+#FIXME: should we introduce a Termination S3 object. Number of conditions is going to grow.
 runCMAES = function(objective.fun, start.point = NULL,
 	population.size = NULL, sigma, 
 	max.iter = 10L, max.evals = Inf, max.time = Inf,

@@ -2,6 +2,7 @@
 
 export(makeMonitor)
 export(makeSimpleMonitor)
+export(runCMAES)
 import(BBmisc)
 import(ParamHelpers)
 import(checkmate)

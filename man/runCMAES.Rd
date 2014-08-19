@@ -28,7 +28,7 @@ Maximal number of sequential iterations.}
 Monitoring object.}
 }
 \value{
-[\code{CMAES_result}] Result object.
+e[\code{CMAES_result}] Result object.
 }
 \description{
 Performs non-linear, non-convex optimization by means of the Covariance

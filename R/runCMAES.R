@@ -17,7 +17,8 @@
 #'   Maximal number of sequential iterations.
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
-#' @return [\code{CMAES_result}] Result object.
+#' @return e[\code{CMAES_result}] Result object.
+#' @export
 runCMAES = function(objective.fun, start.point = NULL, population.size = NULL, sigma, max.iter = 10L, monitor = makeSimpleMonitor()) {
 	assertClass(objective.fun, "otf_function")
 

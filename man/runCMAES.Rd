@@ -4,7 +4,8 @@
 \title{Covariance-Matrix-Adaption}
 \usage{
 runCMAES(objective.fun, start.point = NULL, population.size = NULL, sigma,
-  max.iter = 10L, monitor = makeSimpleMonitor())
+  max.iter = 10L, max.evals = Inf, max.time = Inf,
+  monitor = makeSimpleMonitor())
 }
 \arguments{
 \item{objective.fun}{[\code{\link[otf]{otf_function}}]\cr
@@ -23,6 +24,12 @@ Initial step-size, i. e., standard deviation in each coordinate direction.}
 
 \item{max.iter}{[\code{integer(1)}]\cr
 Maximal number of sequential iterations.}
+
+\item{max.evals}{[\code{integer(1)}]\cr
+Maximal number of function evaluations. Default is Inf.}
+
+\item{max.time}{[\code{integer(1)}]\cr
+Maximal time budget in seconds. Default is Inf.}
 
 \item{monitor}{[\code{cma_monitor}]\cr
 Monitoring object.}

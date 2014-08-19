@@ -15,11 +15,18 @@
 #'   Initial step-size, i. e., standard deviation in each coordinate direction.
 #' @param max.iter [\code{integer(1)}]\cr
 #'   Maximal number of sequential iterations.
+#' @param max.evals [\code{integer(1)}]\cr
+#'   Maximal number of function evaluations. Default is Inf.
+#' @param max.time [\code{integer(1)}]\cr
+#'   Maximal time budget in seconds. Default is Inf.
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
 #' @return e[\code{CMAES_result}] Result object.
 #' @export
-runCMAES = function(objective.fun, start.point = NULL, population.size = NULL, sigma, max.iter = 10L, monitor = makeSimpleMonitor()) {
+runCMAES = function(objective.fun, start.point = NULL,
+	population.size = NULL, sigma, 
+	max.iter = 10L, max.evals = Inf, max.time = Inf,
+	monitor = makeSimpleMonitor()) {
 	assertClass(objective.fun, "otf_function")
 
 	# extract relevant data
@@ -49,6 +56,15 @@ runCMAES = function(objective.fun, start.point = NULL, population.size = NULL, s
 	}
 	assertNumber(sigma, lower = 0L, finite = TRUE)
 	assertCount(max.iter, positive = TRUE)
+
+	if (!is.infinite(max.evals)) {
+		assertNumber(max.evals, lower = 0L, na.ok = FALSE)
+	}
+
+	if (!is.infinite(max.time)) {
+		assertNumber(max.time, lower = 0L, na.ok = FALSE)
+	}
+
 	if (!is.null(monitor)) {		
 		assertClass(monitor, "cma_monitor")	
 	}
@@ -107,11 +123,7 @@ runCMAES = function(objective.fun, start.point = NULL, population.size = NULL, s
 	x.mean = start.point
 
 	iter = 1L
-
-	doMonitor = function(monitor, moment, ...) {
-		if (!is.null(monitor))
-			monitor[[moment]](...)
-	}
+	start.time = Sys.time()
 
 	doMonitor(monitor, "before", iter, best.param, best.fitness)
 
@@ -124,8 +136,8 @@ runCMAES = function(objective.fun, start.point = NULL, population.size = NULL, s
 			y[i, ] = B %*% D %*% t(rmvnorm(n = 1, sigma = diag(n)))
 			population[i, ] = x.mean + sigma * y[i, ]
 			fitness[i] = objective.fun(population[i, ])
-			count.eval = count.eval + 1L
 		}
+		count.eval = count.eval + lambda
 
 		fitness.order = order(fitness)
 		x.mean = colSums(population[fitness.order[1:mu], ] * weights)
@@ -159,16 +171,46 @@ runCMAES = function(objective.fun, start.point = NULL, population.size = NULL, s
 
 		doMonitor(monitor, "step", iter, best.param, best.fitness, population)
 		
-		#FIXME: write helpers getTerminationCode, getTerminationMessage
-		if (iter >= max.iter)
+		# check if we have to stop
+		termination.code = getTerminationCode(iter, max.iter, count.eval, max.evals, start.time, max.time)
+		if (termination.code > -1L) {
 			break
+		}
 		iter = iter + 1L
 	}
 	doMonitor(monitor, "after", iter, best.param, best.fitness)
 	makeS3Obj(
 		best.param = best.param,
 		best.fitness = best.fitness,
-		convergence = 0L,
+		convergence = termination.code,
+		message = getTerminationMessage(termination.code),
 		classes = "cma_result"
 	)
+}
+
+getTerminationCode = function(iter, max.iter, count.evals, max.evals, start.time, max.time) {
+	if (iter > max.iter)
+		return(0L)
+	if (count.evals > max.evals)
+		return(1L)
+	current.time = Sys.time()
+	time.diff = difftime(current.time, start.time, units = "secs")
+	if (time.diff > max.time)
+		return(2L)
+	return(-1L)
+}
+
+getTerminationMessage = function(termination.code) {
+	if (termination.code == 0L)
+		return("Max iterations reached.")
+	if (termination.code == 1L)
+		return("Max functions evaluations exceeded.")
+	if (termination.code == 2L)
+		return("Time budget exceeded.")
+	stopf("Unknown termination code '%i'", termination.code)
+}
+
+doMonitor = function(monitor, moment, ...) {
+	if (!is.null(monitor))
+		monitor[[moment]](...)
 }

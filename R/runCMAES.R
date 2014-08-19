@@ -52,7 +52,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 		if (!hasFiniteBoxConstraints(par.set)) {
 			stopf("No start point provided. Cannot generate one, because parameter set cannot sample with Inf bounds!")
 		}
-		start.point = unlist(samplePoint(par.set))
+		start.point = unlist(sampleValue(par.set))
 	}
 	assertNumber(sigma, lower = 0L, finite = TRUE)
 	assertCount(max.iter, positive = TRUE)

@@ -11,8 +11,6 @@
 #' @return [\code{cma_monitor}]
 #'   Monitor object.
 #' @export
-#FIXME: this is a copy of ecr::makeMonitor. Since it does not use any specific
-#       interfaces it could be exported to a monitoring package?
 makeMonitor = function(before = NULL, step = NULL, after = NULL, ...) {
   if (!is.null(before)) assertFunction(before)
   if (!is.null(step)) assertFunction(step)
@@ -50,4 +48,10 @@ makeSimpleMonitor = function() {
       catf("Optimization terminated.")
     }
 	)
+}
+
+callMonitor = function(monitor, step, envir = parent.frame()) {
+  if (!is.null(monitor)) {
+    monitor[[step]](envir = envir)
+  }
 }

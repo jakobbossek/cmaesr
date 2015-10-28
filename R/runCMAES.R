@@ -81,35 +81,27 @@ runCMAES = function(objective.fun, start.point = NULL,
 		assertClass(monitor, "cma_monitor")
 	}
 
-	## SELECTION AN RECOMBINATION
 	if (is.null(population.size)) {
 		population.size = 4L + floor(3 * log(n))
-	} else {
-		assertInt(population.size, lower = 4L)
 	}
+	assertInt(population.size, lower = 4L)
 
-	# offspring size
+	# population and offspring size
 	lambda = population.size
-
-	# parent size
 	mu = floor(lambda / 2)
 
 	# initialize recombination weights
 	weights = log(mu + 0.5) - log(1:mu)
-
-	# normalize weight vector
-  #FIXME: make sure, that weights are decreasing, i.e., w_1 >= w_2 >= ... >= w_n and sum w_i = 1
 	weights = weights / sum(weights)
 
 	# variance-effectiveness / variance effective selection mass of sum w_i x_i
 	mu.eff = sum(weights)^2 / sum(weights^2) # chosen such that mu.eff ~ lambda/4
 
-
-	## STEP-SIZE CONTROL
+	# step-size control
 	c.sigma = (mu.eff + 2) / (n + mu.eff + 5)
 	d.sigma = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + c.sigma
 
-	## COVARIANCE MATRIX ADAPTION
+	# covariance matrix adaption parameters
 	c.c = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
 	c.1 = 2 / ((n + 1.3)^2 + mu.eff)
 	alpha.mu = 2L
@@ -214,7 +206,6 @@ runCMAES = function(objective.fun, start.point = NULL,
 		if (termination.code > -1L) {
 			break
 		}
-		iter = iter + 1L
 	}
 
   callMonitor(monitor, "after")
@@ -226,8 +217,8 @@ runCMAES = function(objective.fun, start.point = NULL,
 		convergence = termination.code,
 		n.evals = n.evals,
 		past.time = as.integer(difftime(Sys.time(), start.time, units = "secs")),
-		n.iters = iter,
-		message = getTerminationMessage(termination.code),
+		n.iters = iter - 1L,
+		message = if (termination.code > -1) getTerminationMessage(termination.code) else NA,
 		classes = "cma_result"
 	)
 }

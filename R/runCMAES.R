@@ -27,15 +27,8 @@
 #'   Monitoring object.
 #' @return [\code{CMAES_result}] Result object.
 #' @export
-#FIXME: there will be many more argument in the future. Add makeCMAESControl() function.
 #FIXME: add handling of noisy functions. See Hansen et al 2009, A Method for Handling Uncertainty in Evolutionary Optimization...
 #FIXME: add restart options
-#FIXME: finish covariance matrix adaption, update of B and D
-#FIXME: move getTermination* to dedicated files
-#FIXME: getTerminationCode is not general enough. We need to add further stopping conditions and with each
-# new stopping condition the number of parameters grows. Hence, getTerminationCode should expect the parent
-# environment as its single parameters. This way we can define arbitrary stopping conditions.
-#FIXME: should we introduce a Termination S3 object. Number of conditions is going to grow.
 runCMAES = function(objective.fun, start.point = NULL,
 	population.size = NULL, sigma,
 	max.iter = 10L, max.evals = Inf, max.time = Inf,
@@ -125,22 +118,22 @@ runCMAES = function(objective.fun, start.point = NULL,
   C = BD %*% t(BD) # C = B D^2 B^T = B B^T, since D equals I_n
   Cinvsqrt = B %*% diag(1 / sqrt(diag(D))) %*% t(B)
 
+  # Precompute E||N(0,I)||
 	chi.n = sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n^2))
 
-	eigen.eval = 0L
-	n.evals = 0L
-
-	# best individual
+	# bookkeep best individual
 	best.param = rep(NA, n)
 	best.fitness = Inf
 
   # set initial distribution mean
 	m = start.point
 
+  # init some termination criteria stuff
 	iter = 0L
+  n.evals = 0L
 	start.time = Sys.time()
 
-	doMonitor(monitor, "before", iter, best.param, best.fitness)
+	monitor$before()
 
 	repeat {
     iter = iter + 1L
@@ -202,7 +195,7 @@ runCMAES = function(objective.fun, start.point = NULL,
     C = BD %*% t(BD)
     Cinvsqrt = B %*% diag(1/diag(D)) %*% t(B) # update C^-1/2
 
-		doMonitor(monitor, "step", iter, best.param, best.fitness, population)
+		monitor$step()
 
     # now check if covariance matrix is positive definite
     if (any(e$values <= sqrt(.Machine$double.eps) * abs(max(e$values)))) {
@@ -211,13 +204,13 @@ runCMAES = function(objective.fun, start.point = NULL,
     }
 
 		# check if we have to stop
-		termination.code = getTerminationCode(iter, max.iter, n.evals, max.evals, start.time, max.time)
+		termination.code = getTerminationCode()
 		if (termination.code > -1L) {
 			break
 		}
 		iter = iter + 1L
 	}
-	doMonitor(monitor, "after", iter, best.param, best.fitness)
+	monitor$after()
 	makeS3Obj(
 		par.set = par.set,
 		best.param = best.param,
@@ -225,7 +218,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 		convergence = termination.code,
 		n.evals = n.evals,
 		past.time = as.integer(difftime(Sys.time(), start.time, units = "secs")),
-		n.iters = iter - 1L,
+		n.iters = iter,
 		message = getTerminationMessage(termination.code),
 		classes = "cma_result"
 	)
@@ -245,14 +238,13 @@ print.cma_result = function(x, ...) {
 	catf("  Time (in seconds) : %i", x$past.time)
 }
 
-getTerminationCode = function(iter, max.iter, count.evals, max.evals, start.time, max.time) {
-	if (iter > max.iter)
+getTerminationCode = function(envir = parent.frame()) {
+	if (envir$iter > envir$max.iter)
 		return(0L)
-	if (count.evals > max.evals)
+	if (envir$n.evals > envir$max.evals)
 		return(1L)
-	current.time = Sys.time()
-	time.diff = difftime(current.time, start.time, units = "secs")
-	if (time.diff > max.time)
+	time.diff = difftime(Sys.time(), envir$start.time, units = "secs")
+	if (time.diff > envir$max.time)
 		return(2L)
 	return(-1L)
 }

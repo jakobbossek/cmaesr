@@ -37,11 +37,17 @@ makeMonitor = function(before = NULL, step = NULL, after = NULL, ...) {
 #' @export
 makeSimpleMonitor = function() {
 	makeMonitor(
-		before = function(...) catf("Starting optimization."),
-		step = function(iter, best.param, best.fitness, ...) {
-			#FIXME: best.param may have more than 2 components
-			catf("Iteration %i: x1 = %f, x2 = %f, y = %f", iter, best.param[1], best.param[2], best.fitness)
+		before = function(envir = parent.frame()) {
+      catf("Starting optimization.")
+    },
+		step = function(envir = parent.frame()) {
+      best.param = as.list(envir$best.param)
+      names(best.param) = getParamIds(envir$par.set)
+      pars = paramValueToString(envir$par.set, x = best.param, num.format = "%.4f")
+			catf("Iteration %i: %s, y = %.4f", envir$iter, pars, envir$best.fitness)
 		},
-		after = function(...) catf("Optimization terminated.")
+		after = function(envir = parent.frame()) {
+      catf("Optimization terminated.")
+    }
 	)
 }

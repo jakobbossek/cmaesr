@@ -119,6 +119,12 @@ runCMAES = function(objective.fun, start.point = NULL,
   # Precompute E||N(0,I)||
 	chi.n = sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n^2))
 
+  # tolerance values
+  # (see Auger & Hansen, 2005 for details)
+  tol.x = 10^(-12) * sigma # stop if all standard devitions are below this
+  tol.fun = 10^(-12) # stop if range of best objective values in last generations is below this value
+  tol.cond = 10^14 # stop if condition number of C exceeds this
+
 	# bookkeep best individual
 	best.param = rep(NA, n)
 	best.fitness = Inf
@@ -163,6 +169,7 @@ runCMAES = function(objective.fun, start.point = NULL,
     # update mean value / center of mass
     new.pop.idx = fitn.ordered.idx[1:mu]
     x.best = x[, new.pop.idx]
+    m.old = m
     m = drop(x.best %*% weights)
 
     #FIXME: do we really need y.w and z.w as variables?
@@ -195,17 +202,57 @@ runCMAES = function(objective.fun, start.point = NULL,
 
 		callMonitor(monitor, "step")
 
-    # now check if covariance matrix is positive definite
+    # CHECK STOPPING CONDITIONS
+    # =========================
+    #FIXME: add logical do.restart property to enable IPOP-CMA-ES. In this case
+    # we need to differentiate between stopping conditions: a) the ones terminating
+    # the optimization completely and b) the ones leading to a restart with mu = 2 * mu.
+    #FIXME: add integer parameter restart.multiplier with default 2
+    stop.msg = NA
+
+    # is covariance matrix not positive definite anymore?
     if (any(e$values <= sqrt(.Machine$double.eps) * abs(max(e$values)))) {
-      messagef("Covariance matrix is not numerically positive definite.")
+      stop.msg = "Covariance matrix is not numerically positive definite."
       break
     }
 
-		# check if we have to stop
-		termination.code = getTerminationCode()
-		if (termination.code > -1L) {
-			break
-		}
+    # generations/iterations
+    if (iter >= max.iter) {
+      stop.msg = "Maximum number of iterations reached."
+      break
+    }
+
+    # running time
+    if (difftime(Sys.time(), start.time, units = "secs") > max.time) {
+      stop.msg = "Time limit reached."
+    }
+
+    # function evalutions
+    if (n.evals >= max.evals) {
+      stop.msg = "Number of functions evaluations reached."
+    }
+
+    # is the standard deviation below tolerance value in all coordinates?
+    if (all(D < tol.x) && all((sigma * p.c) < tol.x)) {
+      stop.msg = "All standard deviations below tolerance value."
+      break
+    }
+
+    # Does addition of 0.1*sigma in a principal axis direction change m?
+    # called 'noeffectaxis' (see Auger & Hansen, 2005)
+    # [experimental]
+    ii = (iter %% n) + 1L
+    ui = e$vectors[, ii]
+    lambdai = sqrt(e$values[ii])
+    if (sum((m.old - (m.old + 0.1 * sigma * lambdai * ui))^2) < .Machine$double.eps) {
+      stop.msg = "Adding fraction of standard deviation in principal axis direction does not change m."
+      break
+    }
+
+    # Does addition of 0.2*sigma to each coordinate of m change m?
+    if (sum((m.old - (m.old + 0.2 * sigma))^2) < .Machine$double.eps) {
+      stop.msg = "Adding fraction of standard deviation to each coordinate of m does not change m."
+    }
 	}
 
   callMonitor(monitor, "after")
@@ -214,11 +261,10 @@ runCMAES = function(objective.fun, start.point = NULL,
 		par.set = par.set,
 		best.param = best.param,
 		best.fitness = best.fitness,
-		convergence = termination.code,
 		n.evals = n.evals,
 		past.time = as.integer(difftime(Sys.time(), start.time, units = "secs")),
 		n.iters = iter - 1L,
-		message = if (termination.code > -1) getTerminationMessage(termination.code) else NA,
+		message = stop.msg,
 		classes = "cma_result"
 	)
 }
@@ -232,5 +278,5 @@ print.cma_result = function(x, ...) {
 	catf("Termination         : %s", x$message)
 	catf("  #Iterations       : %i", x$n.iters)
 	catf("  #Evaluations      : %i", x$n.evals)
-	catf("  Time (in seconds) : %i", x$past.time)
+	catf("  Time              : %i (secs)", x$past.time)
 }

@@ -50,6 +50,40 @@ makeSimpleMonitor = function() {
 	)
 }
 
+#' Generator for visualizing monitor.
+#'
+#' This generator visualizes the optimization process for two-dimensional functions
+#' by means of \pkg{ggplot2}.
+#'
+#' @return [\code{cma_monitor}]
+#' @export
+makeVisualizingMonitor = function() {
+  makeMonitor(
+    before = function(envir = parent.frame()) {},
+    step = function(envir = parent.frame()) {
+      # get the population and mean/center
+      x = envir$x
+      m = envir$m
+
+      df = as.data.frame(t(cbind(x, m)))
+      df$Type = "Population"
+      df[nrow(df), "Type"] = "Mean"
+      colnames(df) = c("x1", "x2", "Type")
+      df$Type = as.factor(df$Type)
+
+      # use smoof's autoplot function to generate the contour plot
+      pl = autoplot(envir$objective.fun)
+      # ... and decorate with the points
+      pl = pl + geom_point(data = df, aes(x = x1, y = x2, colour = Type))
+      pl = pl + theme(legend.position = "bottom")
+      print(pl)
+      pause()
+    },
+    after = function(envir = parent.frame()) {}
+  )
+}
+
+
 callMonitor = function(monitor, step, envir = parent.frame()) {
   if (!is.null(monitor)) {
     monitor[[step]](envir = envir)

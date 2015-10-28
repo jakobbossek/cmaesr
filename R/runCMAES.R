@@ -2,7 +2,7 @@
 #'
 #' @description
 #' Performs non-linear, non-convex optimization by means of the Covariance
-#' Matrix Adaption Evolutionary Strategy by Hansen.
+#' Matrix Adaption Evolution Strategy (CMA-ES).
 #'
 #' @param objective.fun [\code{smoof_function}]\cr
 #'   Numerical objective function of type \code{smoof_function}. The function
@@ -35,6 +35,7 @@
 #' @export
 #FIXME: add handling of noisy functions. See Hansen et al 2009, A Method for Handling Uncertainty in Evolutionary Optimization...
 #FIXME: add restart options
+#FIXME: add control object
 runCMAES = function(objective.fun, start.point = NULL,
 	population.size = NULL, sigma,
 	max.iter = 10L, max.evals = Inf, max.time = Inf,

@@ -1,5 +1,5 @@
 #' @import BBmisc
-#' @import otf
+#' @import smoof
 #' @import ParamHelpers
 #' @import checkmate
 #' @import mvtnorm

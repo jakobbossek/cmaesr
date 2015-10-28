@@ -1,11 +1,11 @@
-#' @tittle Covariance-Matrix-Adaption
+#' @title Covariance-Matrix-Adaption
 #'
 #' @description
 #' Performs non-linear, non-convex optimization by means of the Covariance
 #' Matrix Adaption Evolutionary Strategy by Hansen.
 #'
-#' @param objective.fun [\code{\link[otf]{otf_function}}]\cr
-#'   Numerical objective function of type \code{\link[otf]{otf_function}}. The function
+#' @param objective.fun [\code{smoof_function}]\cr
+#'   Numerical objective function of type \code{smoof_function}. The function
 #'   must expect a list of numerical values and return a scaler numerical value.
 #' @param start.point [\code{numeric}]\cr
 #'   Initial solution vector. If \code{NULL}, one is generated randomly within the
@@ -40,7 +40,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 	population.size = NULL, sigma,
 	max.iter = 10L, max.evals = Inf, max.time = Inf,
 	monitor = makeSimpleMonitor()) {
-	assertClass(objective.fun, "otf_function")
+	assertClass(objective.fun, "smoof_function")
 
 	# extract relevant data
 	par.set = getParamSet(objective.fun)

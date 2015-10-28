@@ -99,28 +99,32 @@ runCMAES = function(objective.fun, start.point = NULL,
 	weights = log(mu + 0.5) - log(1:mu)
 
 	# normalize weight vector
+  #FIXME: make sure, that weights are decreasing, i.e., w_1 >= w_2 >= ... >= w_n and sum w_i = 1
 	weights = weights / sum(weights)
 
 	# variance-effectiveness / variance effective selection mass of sum w_i x_i
-	mu.eff = 1 / sum(weights^2)
+	mu.eff = sum(weights)^2 / sum(weights^2) # chosen such that mu.eff ~ lambda/4
 
 
 	## STEP-SIZE CONTROL
 	c.sigma = (mu.eff + 2) / (n + mu.eff + 5)
-	d.sigma = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1))) + c.sigma
+	d.sigma = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + c.sigma
 
 	## COVARIANCE MATRIX ADAPTION
 	c.c = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
 	c.1 = 2 / ((n + 1.3)^2 + mu.eff)
 	alpha.mu = 2L
-	c.mu = min(1 - c.1, alpha.mu * (mu.eff - 2 + 1/mu.eff) / ((n + 2)^2 + alpha.mu * mu.eff / 2))
+	c.mu = min(1 - c.1, alpha.mu * (mu.eff - 2 + 1/mu.eff) / ((n + 2)^2 + mu.eff))
 
 	# path for covariance matrix C and stepsize sigma
-	path.c = path.sigma = rep(0, n)
+	p.c = rep(0, n)
+  p.sigma = rep(0, n)
 	B = diag(n)
 	D = diag(n)
-	C = diag(n)
-	C.invsqrt = diag(n)
+	BD = B %*% D
+  C = BD %*% t(BD) # C = B D^2 B^T = B B^T, since D equals I_n
+  Cinvsqrt = B %*% diag(1 / sqrt(diag(D))) %*% t(B)
+
 	chi.n = sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n^2))
 
 	eigen.eval = 0L
@@ -130,59 +134,81 @@ runCMAES = function(objective.fun, start.point = NULL,
 	best.param = rep(NA, n)
 	best.fitness = Inf
 
-	## INITIALIZE BOOKKEEPING VARIABLES
-	fitness = numeric(lambda)
-	population = matrix(0, nrow = lambda, ncol = n)
-	x.mean = start.point
+  # set initial distribution mean
+	m = start.point
 
-	iter = 1L
+	iter = 0L
 	start.time = Sys.time()
 
 	doMonitor(monitor, "before", iter, best.param, best.fitness)
 
 	repeat {
-		#FIXME: this is ugly as sin
+    iter = iter + 1L
 
-		y = matrix(0, nrow = lambda, ncol = n)
+    # create new population of search points
+		z = matrix(rnorm(n * lambda), ncol = lambda)
+    y = BD %*% z # ~ N(0, C)
+    x = m + sigma * y # ~ N(m, sigma^2 C)
 
-		for (i in 1:lambda) {
-			y[i, ] = B %*% D %*% t(rmvnorm(n = 1, sigma = diag(n)))
-			population[i, ] = x.mean + sigma * y[i, ]
-			fitness[i] = objective.fun(population[i, ])
-		}
+    # compute fitness values (each idividual is a column of x)
+    fitn = apply(x, 2L, function(x) objective.fun(x))
+
+    # update evaluation
 		n.evals = n.evals + lambda
 
-		fitness.order = order(fitness)
-		x.mean = colSums(population[fitness.order[1:mu], ] * weights)
+    # order fitness values
+    fitn.ordered.idx = order(fitn, decreasing = FALSE)
+    fitn.ordered = fitn[fitn.ordered.idx]
 
-		#FIXME: ugly
-		y.w = colSums(y[fitness.order[1:mu], ] * weights)
+    # lambda best individuals
+    fitn.best = fitn.ordered[1:mu]
 
-		best.param = population[fitness.order[1], ]
-		best.fitness = fitness[fitness.order[1]]
+    # update best solution so far
+    if (fitn.ordered[1L] < best.fitness) {
+      best.fitness = fitn.ordered[1L]
+      best.param = x[, fitn.ordered.idx[1L], drop = TRUE]
+    }
 
+    # update mean value / center of mass
+    new.pop.idx = fitn.ordered.idx[1:mu]
+    x.best = x[, new.pop.idx]
+    m = drop(x.best %*% weights)
 
-		# Update evolution path
-		path.sigma = (1 - c.sigma) * path.sigma + sqrt(c.sigma * (2 - c.sigma) * mu.eff) * C.invsqrt %*% y.w
-		h.sigma = sum(path.sigma) / sqrt(1 - (1 - c.sigma)^(2*(iter + 1))) < chi.n * (1.4 + 2 / (n + 1))
-		path.sigma.norm = sqrt(sum(path.sigma^2))
-		sigma = sigma * exp(c.sigma / d.sigma * ((path.sigma.norm / chi.n) - 1))
+    #FIXME: do we really need y.w and z.w as variables?
+    y.best = y[, new.pop.idx]
+    y.w = drop(y.best %*% weights)
+    z.best = z[, new.pop.idx]
+    z.w = drop(z.best %*% weights)
 
-		# catf("h.sigma: %i", as.integer(h.sigma))
-		# catf("path.sigma norm: %f", path.sigma.norm)
-		# catf("SIGMA: %f", sigma)
+		# Update evolution path with cumulative step-size adaption (CSA) / path length control
+    # For an explanation of the last factor see appendix A in https://www.lri.fr/~hansen/cmatutorial.pdf
+    p.sigma = (1 - c.sigma) * p.sigma + sqrt(c.sigma * (2 - c.sigma) * mu.eff) * (Cinvsqrt %*% y.w)
+		h.sigma = as.integer(norm(p.sigma) / sqrt(1 - (1 - c.sigma)^(2 * (iter + 1))) < chi.n * (1.4 + 2 / (n + 1)))
 
 		# Update covariance matrix
-		path.c = (1 - c.c) * path.c + h.sigma * sqrt(c.c * (2 - c.c) * mu.eff) * y.w
-		C = (1 - c.1 - c.mu) * C + c.1 * (path.c %*% t(path.c) + (1 - h.sigma) * c.sigma * (2 - c.c) * C)
-		tmp = 0
-		for (i in 1:mu) {
-			yi = y[fitness.order[i], ]
-			tmp = weights[i] * yi %*% t(yi)
-		}
-		C = C + c.mu * tmp
+    p.c = (1 - c.c) * p.c + h.sigma * sqrt(c.c * (2 - c.c) * mu.eff) * y.w
+    y = BD %*% z.best
+    delta.h.sigma = as.numeric((1 - h.sigma) * c.c * (2 - c.c) <= 1)
+		C = (1 - c.1 - c.mu) * C + c.1 * (p.c %*% t(p.c) + delta.h.sigma * C) + c.mu * y %*% diag(weights) %*% t(y)
+
+    # Update step-size sigma
+    sigma = sigma * exp(c.sigma / d.sigma * ((norm(p.sigma) / chi.n) - 1))
+
+    # Finally do decomposition C = B D^2 B^T
+    e = eigen(C, symmetric = TRUE)
+    B = e$vectors
+    D = diag(sqrt(e$values))
+    BD = B %*% D
+    C = BD %*% t(BD)
+    Cinvsqrt = B %*% diag(1/diag(D)) %*% t(B) # update C^-1/2
 
 		doMonitor(monitor, "step", iter, best.param, best.fitness, population)
+
+    # now check if covariance matrix is positive definite
+    if (any(e$values <= sqrt(.Machine$double.eps) * abs(max(e$values)))) {
+      messagef("Covariance matrix is not numerically positive definite.")
+      break
+    }
 
 		# check if we have to stop
 		termination.code = getTerminationCode(iter, max.iter, n.evals, max.evals, start.time, max.time)

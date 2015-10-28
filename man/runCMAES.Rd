@@ -45,4 +45,10 @@ Monitoring object.}
 Performs non-linear, non-convex optimization by means of the Covariance
 Matrix Adaption Evolutionary Strategy by Hansen.
 }
+\examples{
+# generate objective function from smoof package
+fn = makeRosenbrockFunction(dimensions = 2L)
+res = runCMAES(fn, max.iter = 100L, population.size = 100L, sigma = 1, monitor = NULL)
+print(res)
+}
 

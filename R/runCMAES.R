@@ -26,6 +26,12 @@
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
 #' @return [\code{CMAES_result}] Result object.
+#'
+#' @examples
+#' # generate objective function from smoof package
+#' fn = makeRosenbrockFunction(dimensions = 2L)
+#' res = runCMAES(fn, max.iter = 100L, population.size = 100L, sigma = 1, monitor = NULL)
+#' print(res)
 #' @export
 #FIXME: add handling of noisy functions. See Hansen et al 2009, A Method for Handling Uncertainty in Evolutionary Optimization...
 #FIXME: add restart options
@@ -133,7 +139,7 @@ runCMAES = function(objective.fun, start.point = NULL,
   n.evals = 0L
 	start.time = Sys.time()
 
-	monitor$before()
+	callMonitor(monitor, "before")
 
 	repeat {
     iter = iter + 1L
@@ -195,7 +201,7 @@ runCMAES = function(objective.fun, start.point = NULL,
     C = BD %*% t(BD)
     Cinvsqrt = B %*% diag(1/diag(D)) %*% t(B) # update C^-1/2
 
-		monitor$step()
+		callMonitor(monitor, "step")
 
     # now check if covariance matrix is positive definite
     if (any(e$values <= sqrt(.Machine$double.eps) * abs(max(e$values)))) {
@@ -210,7 +216,9 @@ runCMAES = function(objective.fun, start.point = NULL,
 		}
 		iter = iter + 1L
 	}
-	monitor$after()
+
+  callMonitor(monitor, "after")
+
 	makeS3Obj(
 		par.set = par.set,
 		best.param = best.param,
@@ -226,11 +234,9 @@ runCMAES = function(objective.fun, start.point = NULL,
 
 #' @export
 print.cma_result = function(x, ...) {
-	par.set = x$par.set
-	par.names = getParamIds(par.set, repeated = TRUE, with.nr = TRUE)
-	best.param = as.list(x$best.param)
-	names(best.param) = par.names
-	catf("Best parameter      : %s", paramValueToString(par.set, best.param))
+	best.param = list(x$best.param)
+	names(best.param) = getParamIds(x$par.set)
+	catf("Best parameter      : %s", paramValueToString(x$par.set, best.param))
 	catf("Best fitness value  : %.6g", x$best.fitness)
 	catf("Termination         : %s", x$message)
 	catf("  #Iterations       : %i", x$n.iters)

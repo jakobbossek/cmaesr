@@ -1,5 +1,6 @@
-#' Covariance-Matrix-Adaption
+#' @tittle Covariance-Matrix-Adaption
 #'
+#' @description
 #' Performs non-linear, non-convex optimization by means of the Covariance
 #' Matrix Adaption Evolutionary Strategy by Hansen.
 #'
@@ -7,7 +8,7 @@
 #'   Numerical objective function of type \code{\link[otf]{otf_function}}. The function
 #'   must expect a list of numerical values and return a scaler numerical value.
 #' @param start.point [\code{numeric}]\cr
-#'   Initial solution vector. If \code{NULL}, one is generated randomly within the 
+#'   Initial solution vector. If \code{NULL}, one is generated randomly within the
 #'   box constraints offered by the paramter set of the objective function.
 #' @param population.size [\code{integer(1)}]\cr
 #'   Population size.
@@ -15,22 +16,28 @@
 #'   Initial step-size, i. e., standard deviation in each coordinate direction.
 #' @param max.iter [\code{integer(1)}]\cr
 #'   Maximal number of sequential iterations.
+#'   Default is 10.
 #' @param max.evals [\code{integer(1)}]\cr
-#'   Maximal number of function evaluations. Default is Inf.
+#'   Maximal number of function evaluations.
+#'   Default is \code{Inf}.
 #' @param max.time [\code{integer(1)}]\cr
-#'   Maximal time budget in seconds. Default is Inf.
+#'   Maximal time budget in seconds.
+#'   Default is \code{Inf}.
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
-#' @return e[\code{CMAES_result}] Result object.
+#' @return [\code{CMAES_result}] Result object.
 #' @export
 #FIXME: there will be many more argument in the future. Add makeCMAESControl() function.
 #FIXME: add handling of noisy functions. See Hansen et al 2009, A Method for Handling Uncertainty in Evolutionary Optimization...
 #FIXME: add restart options
 #FIXME: finish covariance matrix adaption, update of B and D
 #FIXME: move getTermination* to dedicated files
+#FIXME: getTerminationCode is not general enough. We need to add further stopping conditions and with each
+# new stopping condition the number of parameters grows. Hence, getTerminationCode should expect the parent
+# environment as its single parameters. This way we can define arbitrary stopping conditions.
 #FIXME: should we introduce a Termination S3 object. Number of conditions is going to grow.
 runCMAES = function(objective.fun, start.point = NULL,
-	population.size = NULL, sigma, 
+	population.size = NULL, sigma,
 	max.iter = 10L, max.evals = Inf, max.time = Inf,
 	monitor = makeSimpleMonitor()) {
 	assertClass(objective.fun, "otf_function")
@@ -53,7 +60,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 	}
 
 	if (!is.null(start.point)) {
-		assertNumeric(start.point, len = n, any.missing = FALSE)	
+		assertNumeric(start.point, len = n, any.missing = FALSE)
 	} else {
 		if (!hasFiniteBoxConstraints(par.set)) {
 			stopf("No start point provided. Cannot generate one, because parameter set cannot sample with Inf bounds!")
@@ -71,15 +78,15 @@ runCMAES = function(objective.fun, start.point = NULL,
 		assertNumber(max.time, lower = 0L, na.ok = FALSE)
 	}
 
-	if (!is.null(monitor)) {		
-		assertClass(monitor, "cma_monitor")	
+	if (!is.null(monitor)) {
+		assertClass(monitor, "cma_monitor")
 	}
 
 	## SELECTION AN RECOMBINATION
 	if (is.null(population.size)) {
 		population.size = 4L + floor(3 * log(n))
-	} else {		
-		assertInt(population.size, lower = 4L)	
+	} else {
+		assertInt(population.size, lower = 4L)
 	}
 
 	# offspring size
@@ -176,7 +183,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 		C = C + c.mu * tmp
 
 		doMonitor(monitor, "step", iter, best.param, best.fitness, population)
-		
+
 		# check if we have to stop
 		termination.code = getTerminationCode(iter, max.iter, n.evals, max.evals, start.time, max.time)
 		if (termination.code > -1L) {

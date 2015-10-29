@@ -39,7 +39,7 @@ makeSimpleMonitor = function() {
       catf("Starting optimization.")
     },
 		step = function(envir = parent.frame()) {
-      best.param = as.list(envir$best.param)
+      best.param = list(envir$best.param)
       names(best.param) = getParamIds(envir$par.set)
       pars = paramValueToString(envir$par.set, x = best.param, num.format = "%.4f")
 			catf("Iteration %i: %s, y = %.4f", envir$iter, pars, envir$best.fitness)
@@ -63,7 +63,12 @@ makeVisualizingMonitor = function() {
     step = function(envir = parent.frame()) {
       # get the population and mean/center
       x = envir$x
-      m = envir$m
+      m = envir$m.old
+
+      # visualization only applicable for the 2D case
+      if (length(m) != 2L) {
+        invisible(NULL)
+      }
 
       df = as.data.frame(t(cbind(x, m)))
       df$Type = "Population"

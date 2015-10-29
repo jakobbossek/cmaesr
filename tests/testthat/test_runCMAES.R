@@ -32,3 +32,47 @@ test_that("CMA-ES finds optimum of some BBOB functions", {
     } # dims
   } # fun.generators
 })
+
+test_that("CMA-ES works on Sphere with default parameters", {
+  # accepted tolerance value for parameter and fitness values
+  tol = 0.05
+
+  for (dim in c(2, 3, 5)) {
+    fn = makeSphereFunction(dim)
+    res = runCMAES(
+      fn,
+      max.iter = 50L,
+      monitor = NULL,
+      control = list(sigma = 1, lambda = dim * 2 * 10)
+    )
+    expect_true(is.numeric(res$best.fitness))
+    expect_true(all(is.numeric(res$best.param)))
+    expect_true(res$best.fitness < tol, info = sprintf("For '%s' the desired fitness level was not reached.", getName(fn)))
+  }
+})
+
+test_that("CMA-ES stops on invalid input", {
+  control = list(sigma = 1)
+
+  # multi-objective functions not supported
+  fn = makeZDT1Function(2L)
+  expect_error(runCMAES(fn, control = control))
+
+  # noisy functions not allowed
+  fn = makeSphereFunction(2L)
+  attr(fn, "noisy") = TRUE
+  expect_error(runCMAES(fn, control = control))
+
+  # mixed functions
+  fn = makeSingleObjectiveFunction(
+    name = "Mixed",
+    fn = function(x) {
+      return(x$x^2 + as.numeric(x$y == "a"))
+    },
+    par.set = makeParamSet(
+      makeNumericParam("x", lower = -10, upper = 10),
+      makeDiscreteParam("y", values = c("a", "b"))
+    )
+  )
+  expect_error(runCMAES(fn, control = control))
+})

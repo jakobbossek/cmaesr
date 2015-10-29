@@ -83,7 +83,14 @@ makeVisualizingMonitor = function() {
   )
 }
 
-
+#' Helper to call certain step function of a monitor.
+#'
+#' @param monitor [\code{CMAES_monitor}]\cr
+#'   Monitor.
+#' @param step [\code{character(1)}]\cr
+#'   One of before, step, after.
+#' @param envir [\code{environment}]\cr
+#'   The environment to pass.
 callMonitor = function(monitor, step, envir = parent.frame()) {
   if (!is.null(monitor)) {
     monitor[[step]](envir = envir)

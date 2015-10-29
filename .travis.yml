@@ -13,6 +13,5 @@ notifications:
   email:
     recipients:
       - bossek@wi.uni-muenster.de
-      - surmann@statistik.tu-dortmund.de
     on_success: change
     on_failure: always

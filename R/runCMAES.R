@@ -4,16 +4,41 @@
 #' Performs non-linear, non-convex optimization by means of the Covariance
 #' Matrix Adaption Evolution Strategy (CMA-ES).
 #'
+#' @details
+#' You may pass additional parameters to the CMA-ES via the \code{control} argument.
+#' This must be a named list. The following elements will be considered by the
+#' algorithm:
+#' \describe{
+#'   \item{lambda}{Number of offspring generaded in each generation.}
+#'   \item{mu}{Number of individuals in each population. Defaults to \eqn{\lfloor \lambda / 2\rfloor}.}
+#'   \item{weights}{Numeric vector of positive weights.}
+#'   \item{sigma}{Initial step-size.}
+#'   \item{do.restart}{Logical value indicating whether restarts should be triggered after certain
+#'   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
+#'   \item{restart.multiplier}{Factor which is used to increase the population size after restart.}
+#' }
+#'
+#' @references
+#' [1] Auger and Hansen (2005). A Restart CMA Evolution Strategy With Increasing
+#' Population Size. In IEEE Congress on Evolutionary Computation, CEC 2005, Proceedings,
+#' pp. 1769-1776.
+#' [2] N. Hansen (2006). The CMA Evolution Strategy: A Comparing Review. In J.A. Lozano,
+#' P. Larranaga, I. Inza and E. Bengoetxea (Eds.). Towards a new evolutionary computation.
+#' Advances in estimation of distribution algorithms. Springer, pp. 75-102.
+#' [3] Hansen and Ostermeier (1996). Adapting arbitrary normal mutation distributions in evolution
+#' strategies: The covariance matrix adaptation. In Proceedings of the 1996 IEEE
+#' International Conference on Evolutionary Computation, pp. 312-317.
+#'
+#' @note
+#' The restart variant is not yet implemented. Hence, setting \code{do.restart}
+#' in \code{control} has no effect.
+#'
 #' @param objective.fun [\code{smoof_function}]\cr
 #'   Numerical objective function of type \code{smoof_function}. The function
 #'   must expect a list of numerical values and return a scaler numerical value.
 #' @param start.point [\code{numeric}]\cr
 #'   Initial solution vector. If \code{NULL}, one is generated randomly within the
 #'   box constraints offered by the paramter set of the objective function.
-#' @param mu [\code{integer(1)}]\cr
-#'   Population size.
-#' @param sigma [\code{numeric(1)}]\cr
-#'   Initial step-size, i. e., standard deviation in each coordinate direction.
 #' @param max.iter [\code{integer(1)}]\cr
 #'   Maximal number of sequential iterations.
 #'   Default is 10.
@@ -33,12 +58,10 @@
 #' @examples
 #' # generate objective function from smoof package
 #' fn = makeRosenbrockFunction(dimensions = 2L)
-#' res = runCMAES(fn, max.iter = 100L, mu = 100L, sigma = 1, monitor = NULL)
+#' res = runCMAES(fn, max.iter = 100L, monitor = NULL, control = list(sigma = 1.5, lambda = 40))
 #' print(res)
-#FIXME: add details and describe furhter parameters
+#'
 #' @export
-#FIXME: add handling of noisy functions. See Hansen et al 2009, A Method for Handling Uncertainty in Evolutionary Optimization...
-#FIXME: add restart options
 runCMAES = function(objective.fun, start.point = NULL,
 	max.iter = 10L, max.evals = Inf, max.time = Inf,
 	monitor = makeSimpleMonitor(),
@@ -215,10 +238,6 @@ runCMAES = function(objective.fun, start.point = NULL,
 
     # CHECK STOPPING CONDITIONS
     # =========================
-    #FIXME: add logical do.restart property to enable IPOP-CMA-ES. In this case
-    # we need to differentiate between stopping conditions: a) the ones terminating
-    # the optimization completely and b) the ones leading to a restart with mu = 2 * mu.
-    #FIXME: add integer parameter restart.multiplier with default 2
     stop.msg = NA
 
     # is covariance matrix not positive definite anymore?

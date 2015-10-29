@@ -4,9 +4,9 @@
 \alias{runCMAES}
 \title{Covariance-Matrix-Adaption}
 \usage{
-runCMAES(objective.fun, start.point = NULL, population.size = NULL, sigma,
-  max.iter = 10L, max.evals = Inf, max.time = Inf,
-  monitor = makeSimpleMonitor())
+runCMAES(objective.fun, start.point = NULL, max.iter = 10L,
+  max.evals = Inf, max.time = Inf, monitor = makeSimpleMonitor(),
+  control = list())
 }
 \arguments{
 \item{objective.fun}{[\code{smoof_function}]\cr
@@ -16,12 +16,6 @@ must expect a list of numerical values and return a scaler numerical value.}
 \item{start.point}{[\code{numeric}]\cr
 Initial solution vector. If \code{NULL}, one is generated randomly within the
 box constraints offered by the paramter set of the objective function.}
-
-\item{population.size}{[\code{integer(1)}]\cr
-Population size.}
-
-\item{sigma}{[\code{numeric(1)}]\cr
-Initial step-size, i. e., standard deviation in each coordinate direction.}
 
 \item{max.iter}{[\code{integer(1)}]\cr
 Maximal number of sequential iterations.
@@ -37,18 +31,51 @@ Default is \code{Inf}.}
 
 \item{monitor}{[\code{cma_monitor}]\cr
 Monitoring object.}
+
+\item{control}{[\code{list}]\cr
+Futher paramters for the CMA-ES. See the details section for more in-depth
+information.}
 }
 \value{
 [\code{CMAES_result}] Result object.
 }
 \description{
 Performs non-linear, non-convex optimization by means of the Covariance
-Matrix Adaption Evolutionary Strategy by Hansen.
+Matrix Adaption Evolution Strategy (CMA-ES).
+}
+\details{
+You may pass additional parameters to the CMA-ES via the \code{control} argument.
+This must be a named list. The following elements will be considered by the
+algorithm:
+\describe{
+  \item{lambda}{Number of offspring generaded in each generation.}
+  \item{mu}{Number of individuals in each population. Defaults to \eqn{\lfloor \lambda / 2\rfloor}.}
+  \item{weights}{Numeric vector of positive weights.}
+  \item{sigma}{Initial step-size.}
+  \item{do.restart}{Logical value indicating whether restarts should be triggered after certain
+  stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
+  \item{restart.multiplier}{Factor which is used to increase the population size after restart.}
+}
+}
+\note{
+The restart variant is not yet implemented. Hence, setting \code{do.restart}
+in \code{control} has no effect.
 }
 \examples{
 # generate objective function from smoof package
 fn = makeRosenbrockFunction(dimensions = 2L)
-res = runCMAES(fn, max.iter = 100L, population.size = 100L, sigma = 1, monitor = NULL)
+res = runCMAES(fn, max.iter = 100L, monitor = NULL, control = list(sigma = 1.5, lambda = 40))
 print(res)
+}
+\references{
+[1] Auger and Hansen (2005). A Restart CMA Evolution Strategy With Increasing
+Population Size. In IEEE Congress on Evolutionary Computation, CEC 2005, Proceedings,
+pp. 1769-1776.
+[2] N. Hansen (2006). The CMA Evolution Strategy: A Comparing Review. In J.A. Lozano,
+P. Larranaga, I. Inza and E. Bengoetxea (Eds.). Towards a new evolutionary computation.
+Advances in estimation of distribution algorithms. Springer, pp. 75-102.
+[3] Hansen and Ostermeier (1996). Adapting arbitrary normal mutation distributions in evolution
+strategies: The covariance matrix adaptation. In Proceedings of the 1996 IEEE
+International Conference on Evolutionary Computation, pp. 312-317.
 }
 

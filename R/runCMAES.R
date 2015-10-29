@@ -1,6 +1,3 @@
-getCMAESParameter = function(control, what, default) {
-  return(coalesce(control[[what]], default))
-}
 #' @title Covariance-Matrix-Adaption
 #'
 #' @description
@@ -249,27 +246,27 @@ runCMAES = function(objective.fun, start.point = NULL,
     }
 
     # is the standard deviation below tolerance value in all coordinates?
-    # if (all(D < tol.x) && all((sigma * p.c) < tol.x)) {
-    #   stop.msg = "All standard deviations below tolerance value."
-    #   break
-    # }
+    if (all(D < tol.x) && all((sigma * p.c) < tol.x)) {
+      stop.msg = "All standard deviations below tolerance value."
+      break
+    }
 
-    # # Does addition of 0.1*sigma in a principal axis direction change m?
-    # # called 'noeffectaxis' (see Auger & Hansen, 2005)
-    # # [experimental]
-    # ii = (iter %% n) + 1L
-    # ui = e$vectors[, ii]
-    # lambdai = sqrt(e$values[ii])
-    # if (sum((m.old - (m.old + 0.1 * sigma * lambdai * ui))^2) < .Machine$double.eps) {
-    #   stop.msg = "Adding fraction of standard deviation in principal axis direction does not change m."
-    #   break
-    # }
+    # Does addition of 0.1*sigma in a principal axis direction change m?
+    # called 'noeffectaxis' (see Auger & Hansen, 2005)
+    # [experimental]
+    ii = (iter %% n) + 1L
+    ui = e$vectors[, ii]
+    lambdai = sqrt(e$values[ii])
+    if (sum((m.old - (m.old + 0.1 * sigma * lambdai * ui))^2) < .Machine$double.eps) {
+      stop.msg = "Adding fraction of standard deviation in principal axis direction does not change m."
+      break
+    }
 
-    # # Does addition of 0.2*sigma to each coordinate of m change m?
-    # if (sum((m.old - (m.old + 0.2 * sigma))^2) < .Machine$double.eps) {
-    #   stop.msg = "Adding fraction of standard deviation to each coordinate of m does not change m."
-    #   break
-    # }
+    # Does addition of 0.2*sigma to each coordinate of m change m?
+    if (sum((m.old - (m.old + 0.2 * sigma))^2) < .Machine$double.eps) {
+      stop.msg = "Adding fraction of standard deviation to each coordinate of m does not change m."
+      break
+    }
 	}
 
   callMonitor(monitor, "after")

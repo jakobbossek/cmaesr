@@ -1,4 +1,4 @@
-Package: cma
+Package: cmaesr
 Type: Package
 Title: Covariance Matrix Adaption Evolutionary Strategy
 Description: Pure R implementation of the Covariance Matrix Adaption Evolutionary Strategy (CMA-ES).
@@ -6,14 +6,13 @@ Version: 1.0
 Date: 2015-10-28
 Authors@R: c(person("Jakob", "Bossek", email = "j.bossek@gmail.com", role =
     c("aut", "cre")))
-URL: https://github.com/jakobbossek/cma
-BugReports: https://github.com/jakobbossek/cma/issues
+URL: https://github.com/jakobbossek/cmaesr
+BugReports: https://github.com/jakobbossek/cmaesr/issues
 License: BSD_2_clause + file LICENSE
 Depends:
     ParamHelpers (>= 1.3),
     BBmisc (>= 1.6),
     checkmate (>= 1.1),
-    smoof (>= 1.0),
-    mvtnorm
+    smoof (>= 1.0)
 Imports:
     ggplot2

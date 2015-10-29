@@ -1,3 +1,6 @@
+getCMAESParameter = function(control, what, default) {
+  return(coalesce(control[[what]], default))
+}
 #' @title Covariance-Matrix-Adaption
 #'
 #' @description
@@ -10,7 +13,7 @@
 #' @param start.point [\code{numeric}]\cr
 #'   Initial solution vector. If \code{NULL}, one is generated randomly within the
 #'   box constraints offered by the paramter set of the objective function.
-#' @param population.size [\code{integer(1)}]\cr
+#' @param mu [\code{integer(1)}]\cr
 #'   Population size.
 #' @param sigma [\code{numeric(1)}]\cr
 #'   Initial step-size, i. e., standard deviation in each coordinate direction.
@@ -25,21 +28,24 @@
 #'   Default is \code{Inf}.
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
+#' @param control [\code{list}]\cr
+#'   Futher paramters for the CMA-ES. See the details section for more in-depth
+#'   information.
 #' @return [\code{CMAES_result}] Result object.
 #'
 #' @examples
 #' # generate objective function from smoof package
 #' fn = makeRosenbrockFunction(dimensions = 2L)
-#' res = runCMAES(fn, max.iter = 100L, population.size = 100L, sigma = 1, monitor = NULL)
+#' res = runCMAES(fn, max.iter = 100L, mu = 100L, sigma = 1, monitor = NULL)
 #' print(res)
+#FIXME: add details and describe furhter parameters
 #' @export
 #FIXME: add handling of noisy functions. See Hansen et al 2009, A Method for Handling Uncertainty in Evolutionary Optimization...
 #FIXME: add restart options
-#FIXME: add control object
 runCMAES = function(objective.fun, start.point = NULL,
-	population.size = NULL, sigma,
 	max.iter = 10L, max.evals = Inf, max.time = Inf,
-	monitor = makeSimpleMonitor()) {
+	monitor = makeSimpleMonitor(),
+  control = list()) {
 	assertClass(objective.fun, "smoof_function")
 
 	# extract relevant data
@@ -67,7 +73,6 @@ runCMAES = function(objective.fun, start.point = NULL,
 		}
 		start.point = unlist(sampleValue(par.set))
 	}
-	assertNumber(sigma, lower = 0L, finite = TRUE)
 	assertCount(max.iter, positive = TRUE)
 
 	if (!is.infinite(max.evals)) {
@@ -82,18 +87,25 @@ runCMAES = function(objective.fun, start.point = NULL,
 		assertClass(monitor, "cma_monitor")
 	}
 
-	if (is.null(population.size)) {
-		population.size = 4L + floor(3 * log(n))
-	}
-	assertInt(population.size, lower = 4L)
+  # population and offspring size
+  lambda = getCMAESParameter(control, "lambda", 4L + floor(3 * log(n)))
+  assertInt(lambda, lower = 4)
+  mu = getCMAESParameter(control, "mu", floor(lambda / 2))
+  assertInt(mu)
 
-	# population and offspring size
-	lambda = population.size
-	mu = floor(lambda / 2)
+  # initialize recombination weights
+  weights = getCMAESParameter(control, "weights", log(mu + 0.5) - log(1:mu))
+  if (any(weights < 0)) {
+    stopf("All weights need to be positive, but there are %i negative ones.", sum(which(weights < 0)))
+  }
+  weights = weights / sum(weights)
+  if (!(sum(weights) - 1.0) < .Machine$double.eps) {
+    stopf("All 'weights' need to sum up to 1, but actually the sum is %f", sum(weights))
+  }
 
-	# initialize recombination weights
-	weights = log(mu + 0.5) - log(1:mu)
-	weights = weights / sum(weights)
+  #FIXME: default value should be derived from bounds
+  sigma = getCMAESParameter(control, "sigma", 0.5)
+  assertNumber(sigma, lower = 0L, finite = TRUE)
 
 	# variance-effectiveness / variance effective selection mass of sum w_i x_i
 	mu.eff = sum(weights)^2 / sum(weights^2) # chosen such that mu.eff ~ lambda/4
@@ -147,6 +159,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 		z = matrix(rnorm(n * lambda), ncol = lambda)
     y = BD %*% z # ~ N(0, C)
     x = m + sigma * y # ~ N(m, sigma^2 C)
+
 
     # compute fitness values (each idividual is a column of x)
     fitn = apply(x, 2L, function(x) objective.fun(x))
@@ -226,34 +239,37 @@ runCMAES = function(objective.fun, start.point = NULL,
     # running time
     if (difftime(Sys.time(), start.time, units = "secs") > max.time) {
       stop.msg = "Time limit reached."
+      break
     }
 
     # function evalutions
     if (n.evals >= max.evals) {
       stop.msg = "Number of functions evaluations reached."
+      break
     }
 
     # is the standard deviation below tolerance value in all coordinates?
-    if (all(D < tol.x) && all((sigma * p.c) < tol.x)) {
-      stop.msg = "All standard deviations below tolerance value."
-      break
-    }
+    # if (all(D < tol.x) && all((sigma * p.c) < tol.x)) {
+    #   stop.msg = "All standard deviations below tolerance value."
+    #   break
+    # }
 
-    # Does addition of 0.1*sigma in a principal axis direction change m?
-    # called 'noeffectaxis' (see Auger & Hansen, 2005)
-    # [experimental]
-    ii = (iter %% n) + 1L
-    ui = e$vectors[, ii]
-    lambdai = sqrt(e$values[ii])
-    if (sum((m.old - (m.old + 0.1 * sigma * lambdai * ui))^2) < .Machine$double.eps) {
-      stop.msg = "Adding fraction of standard deviation in principal axis direction does not change m."
-      break
-    }
+    # # Does addition of 0.1*sigma in a principal axis direction change m?
+    # # called 'noeffectaxis' (see Auger & Hansen, 2005)
+    # # [experimental]
+    # ii = (iter %% n) + 1L
+    # ui = e$vectors[, ii]
+    # lambdai = sqrt(e$values[ii])
+    # if (sum((m.old - (m.old + 0.1 * sigma * lambdai * ui))^2) < .Machine$double.eps) {
+    #   stop.msg = "Adding fraction of standard deviation in principal axis direction does not change m."
+    #   break
+    # }
 
-    # Does addition of 0.2*sigma to each coordinate of m change m?
-    if (sum((m.old - (m.old + 0.2 * sigma))^2) < .Machine$double.eps) {
-      stop.msg = "Adding fraction of standard deviation to each coordinate of m does not change m."
-    }
+    # # Does addition of 0.2*sigma to each coordinate of m change m?
+    # if (sum((m.old - (m.old + 0.2 * sigma))^2) < .Machine$double.eps) {
+    #   stop.msg = "Adding fraction of standard deviation to each coordinate of m does not change m."
+    #   break
+    # }
 	}
 
   callMonitor(monitor, "after")

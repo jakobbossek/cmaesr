@@ -3,6 +3,7 @@
 S3method(print,cma_result)
 export(makeMonitor)
 export(makeSimpleMonitor)
+export(makeVisualizingMonitor)
 export(runCMAES)
 import(BBmisc)
 import(ParamHelpers)

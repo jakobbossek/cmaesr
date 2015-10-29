@@ -74,7 +74,7 @@ makeVisualizingMonitor = function() {
       # use smoof's autoplot function to generate the contour plot
       pl = autoplot(envir$objective.fun)
       # ... and decorate with the points
-      pl = pl + geom_point(data = df, aes(x = x1, y = x2, colour = Type))
+      pl = pl + geom_point(data = df, aes_string(x = "x1", y = "x2", colour = "Type"))
       pl = pl + theme(legend.position = "bottom")
       print(pl)
       pause()

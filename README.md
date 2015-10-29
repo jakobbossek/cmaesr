@@ -23,14 +23,24 @@ Assume we want to minimize the 2D [Ackeley Function](http://www.sfu.ca/~ssurjano
 
 ```splus
 fn = makeAckleyFunction(dimensions = 2L)
-res = runCMAES(fn, max.iter = 100L, monitor = makeSimpleMonitor(), control = list(sigma = 1.5, lambda = 50))
+res = runCMAES(
+    fn, 
+    max.iter = 100L,
+    monitor = makeSimpleMonitor(),
+    control = list(sigma = 1.5, lambda = 50)
+)
 print(res)
 ```
 
 For 2D functions a monitor for visualization is included.
 ```splus
 fn = makeSphereFunction(dimensions = 2L)
-res = runCMAES(fn, max.iter = 15L, monitor = makeVisualizingMonitor(), control = list(sigma = 1, lambda = 100))
+res = runCMAES(
+    fn,
+    max.iter = 15L,
+    monitor = makeVisualizingMonitor(),
+    control = list(sigma = 1, lambda = 100)
+)
 ```
 
 **Info**: This package will most likely not be released on [CRAN](https://cran.r-project.org/). It will be merged to the [ecr](https://github.com/jakobbossek/ecr) package soon.

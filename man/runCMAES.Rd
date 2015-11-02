@@ -48,17 +48,17 @@ You may pass additional parameters to the CMA-ES via the \code{control} argument
 This must be a named list. The following elements will be considered by the
 algorithm:
 \describe{
-  \item{lambda}{Number of offspring generaded in each generation.}
-  \item{mu}{Number of individuals in each population. Defaults to \eqn{\lfloor \lambda / 2\rfloor}.}
-  \item{weights}{Numeric vector of positive weights.}
-  \item{sigma}{Initial step-size.}
-  \item{do.restart}{Logical value indicating whether restarts should be triggered after certain
+  \item{lambda [\code{integer(1)}]}{Number of offspring generaded in each generation.}
+  \item{mu [\code{integer(1)}]}{Number of individuals in each population. Defaults to \eqn{\lfloor \lambda / 2\rfloor}.}
+  \item{weights [\code{numeric}]}{Numeric vector of positive weights.}
+  \item{sigma [\code{numeric(1)}]}{Initial step-size.}
+  \item{do.restart [\code{logical(1)}]}{Logical value indicating whether restarts should be triggered after certain
   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
-  \item{restart.multiplier}{Factor which is used to increase the population size after restart.}
-  \item{opt.value}{Scalar numeric known optimum.}
-  \item{opt.param}{Numeric vector of target parameters. Algorithm stops if the euclidean distance to
+  \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
+  \item{opt.value [\code{numeric(1)}]}{Scalar numeric known optimum.}
+  \item{opt.param [\code{numeric}]}{Numeric vector of target parameters. Algorithm stops if the euclidean distance to
     \code{opt.param} is lower then \code{tol.value}.}
-  \code{tol.value}{Scalar numeric tolerance value. See \code{opt.value} and \code{opt.param} control
+  \item{tol.value [\code{numeric}]}{Scalar numeric tolerance value. See \code{opt.value} and \code{opt.param} control
     parameters.}
 }
 }

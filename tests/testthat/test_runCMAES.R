@@ -95,14 +95,12 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
       par.set = getParamSet(fn)
       opt = getGlobalOptimum(fn)
       lb = getLower(par.set)[1L]; ub = getUpper(par.set)[1L]
-      control = list(sigma = (ub - lb) / 2, lambda = lambda)
+      control = list(sigma = (ub - lb) / 2, lambda = lambda, opt.value = opt$value, tol.value = tol)
 
       res = runCMAES(fn, control = control, monitor = NULL, max.iter = 150L)
       expect_true(is.numeric(res$best.fitness))
       expect_true(abs(res$best.fitness - opt$value) < tol,
         info = sprintf("Desired fitness level not reached for dim = %i and function '%s'", dim, getName(fn)))
-      expect_true(sum((res$best.param - opt$param)^2) < tol,
-        info = sprintf("Desired parameter approximation not reached for dim = %i and function '%s'", dim, getName(fn)))
     }
   }
 })

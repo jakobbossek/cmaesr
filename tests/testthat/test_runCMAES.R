@@ -76,3 +76,33 @@ test_that("CMA-ES stops on invalid input", {
   )
   expect_error(runCMAES(fn, control = control))
 })
+
+test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", {
+  # check all functions
+  fids = 1:24
+  dims = 2
+  lambda = 250L
+  tol = 0.05
+
+  for (fid in fids) {
+    for (dim in dims) {
+      # skip the hardest (very multimodal) functions
+      if (fid %in% c(4, 5, 16, 23, 24)) {
+        next
+      }
+      #lambda2 =  ifelse (fid %in% c(4, 5, 16, 23, 24), lambda * 4, lambda)
+      fn = makeBBOBFunction(fid = fid, iid = 1L, dimension = dim)
+      par.set = getParamSet(fn)
+      opt = getGlobalOptimum(fn)
+      lb = getLower(par.set)[1L]; ub = getUpper(par.set)[1L]
+      control = list(sigma = (ub - lb) / 2, lambda = lambda)
+
+      res = runCMAES(fn, control = control, monitor = NULL, max.iter = 150L)
+      expect_true(is.numeric(res$best.fitness))
+      expect_true(abs(res$best.fitness - opt$value) < tol,
+        info = sprintf("Desired fitness level not reached for dim = %i and function '%s'", dim, getName(fn)))
+      expect_true(sum((res$best.param - opt$param)^2) < tol,
+        info = sprintf("Desired parameter approximation not reached for dim = %i and function '%s'", dim, getName(fn)))
+    }
+  }
+})

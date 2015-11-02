@@ -75,6 +75,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 
 	# extract relevant data
 	par.set = getParamSet(objective.fun)
+  lb = getLower(par.set); ub = getUpper(par.set)
 	n = getNumberOfParameters(objective.fun)
 
 	# sanity checks
@@ -148,7 +149,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 
 	# step-size control
 	c.sigma = (mu.eff + 2) / (n + mu.eff + 5)
-	d.sigma = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + c.sigma
+	damps = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + c.sigma
 
 	# covariance matrix adaption parameters
 	c.c = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
@@ -196,7 +197,6 @@ runCMAES = function(objective.fun, start.point = NULL,
     y = BD %*% z # ~ N(0, C)
     x = m + sigma * y # ~ N(m, sigma^2 C)
 
-
     # compute fitness values (each idividual is a column of x)
     fitn = apply(x, 2L, function(x) objective.fun(x))
 
@@ -240,7 +240,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 		C = (1 - c.1 - c.mu) * C + c.1 * (p.c %*% t(p.c) + delta.h.sigma * C) + c.mu * y %*% diag(weights) %*% t(y)
 
     # Update step-size sigma
-    sigma = sigma * exp(c.sigma / d.sigma * ((norm(p.sigma) / chi.n) - 1))
+    sigma = sigma * exp(c.sigma / damps * ((norm(p.sigma) / chi.n) - 1))
 
     # Finally do decomposition C = B D^2 B^T
     e = eigen(C, symmetric = TRUE)
@@ -248,7 +248,7 @@ runCMAES = function(objective.fun, start.point = NULL,
     D = diag(sqrt(e$values))
     BD = B %*% D
     C = BD %*% t(BD)
-    Cinvsqrt = B %*% diag(1/diag(D)) %*% t(B) # update C^-1/2
+    Cinvsqrt = B %*% diag(1 / diag(D)) %*% t(B) # update C^-1/2
 
 		callMonitor(monitor, "step")
 
@@ -317,6 +317,12 @@ runCMAES = function(objective.fun, start.point = NULL,
     if (sum((m.old - (m.old + 0.2 * sigma))^2) < .Machine$double.eps) {
       stop.msg = "Adding fraction of standard deviation to each coordinate of m does not change m."
       break
+    }
+
+    # escape flat fitness values
+    if (fitn.ordered[1L] == fitn.ordered[ceiling(0.7 * lambda)]) {
+      sigma = sigma * exp(0.2 + c.sigma / damps)
+      warningf("Flat fitness values; increasing mutation step-size. Consider reformulating the objective!")
     }
 	}
 

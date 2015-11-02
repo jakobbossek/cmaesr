@@ -55,6 +55,11 @@ algorithm:
   \item{do.restart}{Logical value indicating whether restarts should be triggered after certain
   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
   \item{restart.multiplier}{Factor which is used to increase the population size after restart.}
+  \item{opt.value}{Scalar numeric known optimum.}
+  \item{opt.param}{Numeric vector of target parameters. Algorithm stops if the euclidean distance to
+    \code{opt.param} is lower then \code{tol.value}.}
+  \code{tol.value}{Scalar numeric tolerance value. See \code{opt.value} and \code{opt.param} control
+    parameters.}
 }
 }
 \note{

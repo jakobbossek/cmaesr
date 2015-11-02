@@ -16,6 +16,11 @@
 #'   \item{do.restart}{Logical value indicating whether restarts should be triggered after certain
 #'   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
 #'   \item{restart.multiplier}{Factor which is used to increase the population size after restart.}
+#'   \item{opt.value}{Scalar numeric known optimum.}
+#'   \item{opt.param}{Numeric vector of target parameters. Algorithm stops if the euclidean distance to
+#'     \code{opt.param} is lower then \code{tol.value}.}
+#'   \code{tol.value}{Scalar numeric tolerance value. See \code{opt.value} and \code{opt.param} control
+#'     parameters.}
 #' }
 #'
 #' @references
@@ -122,6 +127,10 @@ runCMAES = function(objective.fun, start.point = NULL,
   if (!(sum(weights) - 1.0) < .Machine$double.eps) {
     stopf("All 'weights' need to sum up to 1, but actually the sum is %f", sum(weights))
   }
+
+  tol.value = getCMAESParameter(control, "tol.value", 0.05)
+  opt.value = getCMAESParameter(control, "opt.value", NULL)
+  opt.param = getCMAESParameter(control, "opt.param", NULL)
 
   #FIXME: default value should be derived from bounds
   sigma = getCMAESParameter(control, "sigma", 0.5)
@@ -250,6 +259,22 @@ runCMAES = function(objective.fun, start.point = NULL,
     if (iter >= max.iter) {
       stop.msg = "Maximum number of iterations reached."
       break
+    }
+
+    # close enough to optimal parameters?
+    if (!is.null(opt.param)) {
+      if (sqrt(sum(best.param - opt.param)^2) < tol.value) {
+        stop.msg = "Close enough to optimal parameter values."
+        break
+      }
+    }
+
+    # approximated optimal value?
+    if (!is.null(opt.value)) {
+      if (abs(best.fitness - opt.value) < tol.value) {
+        stop.msg = "Found optimal value."
+        break
+      }
     }
 
     # running time

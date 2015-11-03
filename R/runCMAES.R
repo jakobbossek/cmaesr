@@ -16,11 +16,6 @@
 #'   \item{do.restart [\code{logical(1)}]}{Logical value indicating whether restarts should be triggered after certain
 #'   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
 #'   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
-#'   \item{opt.value [\code{numeric(1)}]}{Scalar numeric known optimum.}
-#'   \item{opt.param [\code{numeric}]}{Numeric vector of target parameters. Algorithm stops if the euclidean distance to
-#'     \code{opt.param} is lower then \code{tol.value}.}
-#'   \item{tol.value [\code{numeric}]}{Scalar numeric tolerance value. See \code{opt.value} and \code{opt.param} control
-#'     parameters.}
 #' }
 #'
 #' @references
@@ -44,15 +39,10 @@
 #' @param start.point [\code{numeric}]\cr
 #'   Initial solution vector. If \code{NULL}, one is generated randomly within the
 #'   box constraints offered by the paramter set of the objective function.
-#' @param max.iter [\code{integer(1)}]\cr
-#'   Maximal number of sequential iterations.
-#'   Default is 10.
-#' @param max.evals [\code{integer(1)}]\cr
-#'   Maximal number of function evaluations.
-#'   Default is \code{Inf}.
-#' @param max.time [\code{integer(1)}]\cr
-#'   Maximal time budget in seconds.
-#'   Default is \code{Inf}.
+#' @param stop.ons [\code{list}]\cr
+#'   List of stopping conditions.
+#'   The default is to stop after 10 iterations or after a kind of a stagnation (see
+#'   \code{\link{getDefaultStoppingConditions}}).
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
 #' @param control [\code{list}]\cr
@@ -63,12 +53,22 @@
 #' @examples
 #' # generate objective function from smoof package
 #' fn = makeRosenbrockFunction(dimensions = 2L)
-#' res = runCMAES(fn, max.iter = 100L, monitor = NULL, control = list(sigma = 1.5, lambda = 40))
+#' res = runCMAES(
+#'   fn,
+#'   stop.ons = c(list(stopOnMaxIters(100L)), getDefaultStoppingConditions()),
+#'   monitor = NULL,
+#'   control = list(sigma = 1.5, lambda = 40)
+#' )
 #' print(res)
 #'
 #' @export
-runCMAES = function(objective.fun, start.point = NULL,
-	max.iter = 10L, max.evals = Inf, max.time = Inf,
+runCMAES = function(
+  objective.fun,
+  start.point = NULL,
+  stop.ons = c(
+    list(stopOnMaxIters(10L)),
+    getDefaultStoppingConditions()
+  ),
 	monitor = makeSimpleMonitor(),
   control = list()) {
 	assertClass(objective.fun, "smoof_function")
@@ -99,15 +99,6 @@ runCMAES = function(objective.fun, start.point = NULL,
 		}
 		start.point = unlist(sampleValue(par.set))
 	}
-	assertCount(max.iter, positive = TRUE)
-
-	if (!is.infinite(max.evals)) {
-		assertNumber(max.evals, lower = 0L, na.ok = FALSE)
-	}
-
-	if (!is.infinite(max.time)) {
-		assertNumber(max.time, lower = 0L, na.ok = FALSE)
-	}
 
 	if (!is.null(monitor)) {
 		assertClass(monitor, "cma_monitor")
@@ -127,17 +118,6 @@ runCMAES = function(objective.fun, start.point = NULL,
   weights = weights / sum(weights)
   if (!(sum(weights) - 1.0) < .Machine$double.eps) {
     stopf("All 'weights' need to sum up to 1, but actually the sum is %f", sum(weights))
-  }
-
-  tol.value = getCMAESParameter(control, "tol.value", 0.05)
-  assertNumber(tol.value, lower = 0, finite = TRUE)
-  opt.value = getCMAESParameter(control, "opt.value", NULL)
-  if (!is.null(opt.value)) {
-    assertNumber(opt.value, finite = TRUE)
-  }
-  opt.param = getCMAESParameter(control, "opt.param", NULL)
-  if (!is.null(opt.param)) {
-    assertNumeric(opt.param, any.missing = FALSE, all.missing = FALSE, len = n)
   }
 
   #FIXME: default value should be derived from bounds
@@ -168,12 +148,6 @@ runCMAES = function(objective.fun, start.point = NULL,
 
   # Precompute E||N(0,I)||
 	chi.n = sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n^2))
-
-  # tolerance values
-  # (see Auger & Hansen, 2005 for details)
-  tol.x = 10^(-12) * sigma # stop if all standard devitions are below this
-  tol.fun = 10^(-12) # stop if range of best objective values in last generations is below this value
-  tol.cond = 10^14 # stop if condition number of C exceeds this
 
 	# bookkeep best individual
 	best.param = rep(NA, n)
@@ -252,77 +226,18 @@ runCMAES = function(objective.fun, start.point = NULL,
 
 		callMonitor(monitor, "step")
 
-    # CHECK STOPPING CONDITIONS
-    # =========================
-    stop.msg = NA
-
-    # is covariance matrix not positive definite anymore?
-    if (any(e$values <= sqrt(.Machine$double.eps) * abs(max(e$values)))) {
-      stop.msg = "Covariance matrix is not numerically positive definite."
-      break
-    }
-
-    # generations/iterations
-    if (iter >= max.iter) {
-      stop.msg = "Maximum number of iterations reached."
-      break
-    }
-
-    # close enough to optimal parameters?
-    if (!is.null(opt.param)) {
-      if (sqrt(sum(best.param - opt.param)^2) < tol.value) {
-        stop.msg = "Close enough to optimal parameter values."
-        break
-      }
-    }
-
-    # approximated optimal value?
-    if (!is.null(opt.value)) {
-      if (abs(best.fitness - opt.value) < tol.value) {
-        stop.msg = "Found optimal value."
-        break
-      }
-    }
-
-    # running time
-    if (difftime(Sys.time(), start.time, units = "secs") > max.time) {
-      stop.msg = "Time limit reached."
-      break
-    }
-
-    # function evalutions
-    if (n.evals >= max.evals) {
-      stop.msg = "Number of functions evaluations reached."
-      break
-    }
-
-    # is the standard deviation below tolerance value in all coordinates?
-    if (all(D < tol.x) && all((sigma * p.c) < tol.x)) {
-      stop.msg = "All standard deviations below tolerance value."
-      break
-    }
-
-    # Does addition of 0.1*sigma in a principal axis direction change m?
-    # called 'noeffectaxis' (see Auger & Hansen, 2005)
-    # [experimental]
-    ii = (iter %% n) + 1L
-    ui = e$vectors[, ii]
-    lambdai = sqrt(e$values[ii])
-    if (sum((m.old - (m.old + 0.1 * sigma * lambdai * ui))^2) < .Machine$double.eps) {
-      stop.msg = "Adding fraction of standard deviation in principal axis direction does not change m."
-      break
-    }
-
-    # Does addition of 0.2*sigma to each coordinate of m change m?
-    if (sum((m.old - (m.old + 0.2 * sigma))^2) < .Machine$double.eps) {
-      stop.msg = "Adding fraction of standard deviation to each coordinate of m does not change m."
-      break
-    }
-
     # escape flat fitness values
     if (fitn.ordered[1L] == fitn.ordered[ceiling(0.7 * lambda)]) {
       sigma = sigma * exp(0.2 + c.sigma / damps)
       warningf("Flat fitness values; increasing mutation step-size. Consider reformulating the objective!")
+    }
+
+    # CHECK STOPPING CONDITIONS
+    # =========================
+    stop.obj = checkStoppingConditions(stop.ons)
+    #print(stop.obj)
+    if (length(stop.obj$stop.msgs) > 0L) {
+      break
     }
 	}
 
@@ -335,7 +250,7 @@ runCMAES = function(objective.fun, start.point = NULL,
 		n.evals = n.evals,
 		past.time = as.integer(difftime(Sys.time(), start.time, units = "secs")),
 		n.iters = iter - 1L,
-		message = stop.msg,
+		message = stop.obj$stop.msgs,
 		classes = "cma_result"
 	)
 }

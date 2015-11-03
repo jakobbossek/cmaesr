@@ -4,9 +4,9 @@
 \alias{runCMAES}
 \title{Covariance-Matrix-Adaption}
 \usage{
-runCMAES(objective.fun, start.point = NULL, max.iter = 10L,
-  max.evals = Inf, max.time = Inf, monitor = makeSimpleMonitor(),
-  control = list())
+runCMAES(objective.fun, start.point = NULL,
+  stop.ons = c(list(stopOnMaxIters(10L)), getDefaultStoppingConditions()),
+  monitor = makeSimpleMonitor(), control = list())
 }
 \arguments{
 \item{objective.fun}{[\code{smoof_function}]\cr
@@ -17,17 +17,10 @@ must expect a list of numerical values and return a scaler numerical value.}
 Initial solution vector. If \code{NULL}, one is generated randomly within the
 box constraints offered by the paramter set of the objective function.}
 
-\item{max.iter}{[\code{integer(1)}]\cr
-Maximal number of sequential iterations.
-Default is 10.}
-
-\item{max.evals}{[\code{integer(1)}]\cr
-Maximal number of function evaluations.
-Default is \code{Inf}.}
-
-\item{max.time}{[\code{integer(1)}]\cr
-Maximal time budget in seconds.
-Default is \code{Inf}.}
+\item{stop.ons}{[\code{list}]\cr
+List of stopping conditions.
+The default is to stop after 10 iterations or after a kind of a stagnation (see
+\code{\link{getDefaultStoppingConditions}}).}
 
 \item{monitor}{[\code{cma_monitor}]\cr
 Monitoring object.}
@@ -55,11 +48,6 @@ algorithm:
   \item{do.restart [\code{logical(1)}]}{Logical value indicating whether restarts should be triggered after certain
   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
-  \item{opt.value [\code{numeric(1)}]}{Scalar numeric known optimum.}
-  \item{opt.param [\code{numeric}]}{Numeric vector of target parameters. Algorithm stops if the euclidean distance to
-    \code{opt.param} is lower then \code{tol.value}.}
-  \item{tol.value [\code{numeric}]}{Scalar numeric tolerance value. See \code{opt.value} and \code{opt.param} control
-    parameters.}
 }
 }
 \note{
@@ -69,7 +57,12 @@ in \code{control} has no effect.
 \examples{
 # generate objective function from smoof package
 fn = makeRosenbrockFunction(dimensions = 2L)
-res = runCMAES(fn, max.iter = 100L, monitor = NULL, control = list(sigma = 1.5, lambda = 40))
+res = runCMAES(
+  fn,
+  stop.ons = c(list(stopOnMaxIters(100L)), getDefaultStoppingConditions()),
+  monitor = NULL,
+  control = list(sigma = 1.5, lambda = 40)
+)
 print(res)
 }
 \references{

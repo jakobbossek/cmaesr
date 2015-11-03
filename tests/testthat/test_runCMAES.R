@@ -9,6 +9,7 @@ test_that("CMA-ES finds optimum of some BBOB functions", {
   # accepted tolerance value for parameter and fitness values
   tol = 0.05
   fun.generators = c(makeSphereFunction, makeAckleyFunction, makeDoubleSumFunction)
+  stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions())
 
   for (generator in fun.generators) {
     for (dim in dims) {
@@ -20,8 +21,8 @@ test_that("CMA-ES finds optimum of some BBOB functions", {
       res = runCMAES(
         fn,
         start.point = runif(dim, min = lb, max = ub),
-        max.iter = max.iters,
         monitor = NULL,
+        stop.ons = stop.ons,
         control = list(lambda = lambda * dim, sigma = sigma)
       )
 
@@ -36,12 +37,13 @@ test_that("CMA-ES finds optimum of some BBOB functions", {
 test_that("CMA-ES works on Sphere with default parameters", {
   # accepted tolerance value for parameter and fitness values
   tol = 0.05
+  max.iters = 50L
 
   for (dim in c(2, 3, 5)) {
     fn = makeSphereFunction(dim)
     res = runCMAES(
       fn,
-      max.iter = 50L,
+      stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions()),
       monitor = NULL,
       control = list(sigma = 1, lambda = dim * 2 * 10)
     )
@@ -83,6 +85,7 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
   dims = 2
   lambda = 250L
   tol = 0.05
+  max.iters = 150L
 
   for (fid in fids) {
     for (dim in dims) {
@@ -97,7 +100,12 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
       lb = getLower(par.set)[1L]; ub = getUpper(par.set)[1L]
       control = list(sigma = (ub - lb) / 2, lambda = lambda, opt.value = opt$value, tol.value = tol)
 
-      res = runCMAES(fn, control = control, monitor = NULL, max.iter = 150L)
+      res = runCMAES(
+        fn,
+        control = control,
+        monitor = NULL,
+        stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions())
+      )
       expect_true(is.numeric(res$best.fitness))
       expect_true(abs(res$best.fitness - opt$value) < tol,
         info = sprintf("Desired fitness level not reached for dim = %i and function '%s'", dim, getName(fn)))

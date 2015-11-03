@@ -16,6 +16,8 @@
 #'   \item{do.restart [\code{logical(1)}]}{Logical value indicating whether restarts should be triggered after certain
 #'   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
 #'   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
+#'   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
+#'   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}})}.
 #' }
 #'
 #' @references
@@ -39,15 +41,11 @@
 #' @param start.point [\code{numeric}]\cr
 #'   Initial solution vector. If \code{NULL}, one is generated randomly within the
 #'   box constraints offered by the paramter set of the objective function.
-#' @param stop.ons [\code{list}]\cr
-#'   List of stopping conditions.
-#'   The default is to stop after 10 iterations or after a kind of a stagnation (see
-#'   \code{\link{getDefaultStoppingConditions}}).
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
 #' @param control [\code{list}]\cr
 #'   Futher paramters for the CMA-ES. See the details section for more in-depth
-#'   information.
+#'   information. Stopping conditions are also defined here.
 #' @return [\code{CMAES_result}] Result object.
 #'
 #' @examples
@@ -55,9 +53,11 @@
 #' fn = makeRosenbrockFunction(dimensions = 2L)
 #' res = runCMAES(
 #'   fn,
-#'   stop.ons = c(list(stopOnMaxIters(100L)), getDefaultStoppingConditions()),
 #'   monitor = NULL,
-#'   control = list(sigma = 1.5, lambda = 40)
+#'   control = list(
+#'     sigma = 1.5, lambda = 40,
+#'     stop.ons = c(list(stopOnMaxIters(100L)), getDefaultStoppingConditions())
+#'   )
 #' )
 #' print(res)
 #'
@@ -65,12 +65,14 @@
 runCMAES = function(
   objective.fun,
   start.point = NULL,
-  stop.ons = c(
-    list(stopOnMaxIters(10L)),
-    getDefaultStoppingConditions()
-  ),
+
 	monitor = makeSimpleMonitor(),
-  control = list()) {
+  control = list(
+    stop.ons = c(
+      list(stopOnMaxIters(10L)),
+      getDefaultStoppingConditions()
+    )
+  )) {
 	assertClass(objective.fun, "smoof_function")
 
 	# extract relevant data
@@ -119,6 +121,13 @@ runCMAES = function(
   if (!(sum(weights) - 1.0) < .Machine$double.eps) {
     stopf("All 'weights' need to sum up to 1, but actually the sum is %f", sum(weights))
   }
+
+  # get stopping conditions
+  stop.ons = getCMAESParameter(control, "stop.ons", NULL)
+  if (is.null(stop.ons)) {
+    stopf("There must be at least one stopping condition!")
+  }
+  assertList(stop.ons, min.len = 1L, types = "cma_stopping_condition")
 
   #FIXME: default value should be derived from bounds
   sigma = getCMAESParameter(control, "sigma", 0.5)

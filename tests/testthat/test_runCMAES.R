@@ -22,8 +22,7 @@ test_that("CMA-ES finds optimum of some BBOB functions", {
         fn,
         start.point = runif(dim, min = lb, max = ub),
         monitor = NULL,
-        stop.ons = stop.ons,
-        control = list(lambda = lambda * dim, sigma = sigma)
+        control = list(lambda = lambda * dim, sigma = sigma, stop.ons = stop.ons)
       )
 
       expect_true(abs(res$best.fitness - opt$value) < tol,
@@ -43,9 +42,12 @@ test_that("CMA-ES works on Sphere with default parameters", {
     fn = makeSphereFunction(dim)
     res = runCMAES(
       fn,
-      stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions()),
       monitor = NULL,
-      control = list(sigma = 1, lambda = dim * 2 * 10)
+      control = list(
+        sigma = 1,
+        lambda = dim * 2 * 10,
+        stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions())
+      )
     )
     expect_true(is.numeric(res$best.fitness))
     expect_true(all(is.numeric(res$best.param)))
@@ -98,13 +100,16 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
       par.set = getParamSet(fn)
       opt = getGlobalOptimum(fn)
       lb = getLower(par.set)[1L]; ub = getUpper(par.set)[1L]
-      control = list(sigma = (ub - lb) / 2, lambda = lambda, opt.value = opt$value, tol.value = tol)
+      control = list(
+        sigma = (ub - lb) / 2,
+        lambda = lambda,
+        stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions())
+      )
 
       res = runCMAES(
         fn,
         control = control,
         monitor = NULL,
-        stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions())
       )
       expect_true(is.numeric(res$best.fitness))
       expect_true(abs(res$best.fitness - opt$value) < tol,

@@ -17,4 +17,12 @@ Default is \code{100}.}
 \description{
 Stopping condition: stop on maximal number of iterations.
 }
+\seealso{
+Other stopping.conditions: \code{\link{stopOnIndefCovMat}};
+  \code{\link{stopOnNoEffectAxis}};
+  \code{\link{stopOnNoEffectCoord}};
+  \code{\link{stopOnOptParam}};
+  \code{\link{stopOnOptValue}};
+  \code{\link{stopOnTimeBudget}}
+}
 

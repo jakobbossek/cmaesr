@@ -16,4 +16,12 @@ Time budget in seconds.}
 \description{
 Stopping condition: stop if maximal running time budget is reached.
 }
+\seealso{
+Other stopping.conditions: \code{\link{stopOnIndefCovMat}};
+  \code{\link{stopOnMaxIters}};
+  \code{\link{stopOnNoEffectAxis}};
+  \code{\link{stopOnNoEffectCoord}};
+  \code{\link{stopOnOptParam}};
+  \code{\link{stopOnOptValue}}
+}
 

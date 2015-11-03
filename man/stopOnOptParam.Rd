@@ -22,4 +22,12 @@ Default is \eqn{1e^{-8}}.}
 Stopping condition: stop if euclidean distance of parameter is below
  some tolerance value.
 }
+\seealso{
+Other stopping.conditions: \code{\link{stopOnIndefCovMat}};
+  \code{\link{stopOnMaxIters}};
+  \code{\link{stopOnNoEffectAxis}};
+  \code{\link{stopOnNoEffectCoord}};
+  \code{\link{stopOnOptValue}};
+  \code{\link{stopOnTimeBudget}}
+}
 

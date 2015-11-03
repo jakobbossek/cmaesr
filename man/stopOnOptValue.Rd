@@ -20,4 +20,12 @@ Default is \eqn{1e^{-8}}.}
 \description{
 Stopping condition: stop if best solution is close to optimal objective value.
 }
+\seealso{
+Other stopping.conditions: \code{\link{stopOnIndefCovMat}};
+  \code{\link{stopOnMaxIters}};
+  \code{\link{stopOnNoEffectAxis}};
+  \code{\link{stopOnNoEffectCoord}};
+  \code{\link{stopOnOptParam}};
+  \code{\link{stopOnTimeBudget}}
+}
 

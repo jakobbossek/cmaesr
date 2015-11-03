@@ -4,6 +4,7 @@
 #'   Maximal number of iterations.
 #'   Default is \code{100}.
 #' @return [\code{cma_stopping_condition}]
+#' @family stopping conditions
 #' @export
 stopOnMaxIters = function(max.iter = 100L) {
   assertInt(max.iter, na.ok = FALSE)
@@ -20,6 +21,7 @@ stopOnMaxIters = function(max.iter = 100L) {
 #' @title Stopping condition: stop if covariance matrix is not positive definite anymore.
 #'
 #' @return [\code{cma_stopping_condition}]
+#' @family stopping conditions
 #' @export
 stopOnIndefCovMat = function() {
   return(makeStoppingCondition(
@@ -42,6 +44,7 @@ stopOnIndefCovMat = function() {
 #'   Tolerance value.
 #'   Default is \eqn{1e^{-8}}.
 #' @return [\code{cma_stopping_condition}]
+#' @family stopping conditions
 #' @export
 stopOnOptParam = function(opt.param, tol = 1e-8) {
   assertNumeric(opt.param, any.missing = FALSE, all.missing = FALSE)
@@ -65,6 +68,7 @@ stopOnOptParam = function(opt.param, tol = 1e-8) {
 #'   Tolerance value.
 #'   Default is \eqn{1e^{-8}}.
 #' @return [\code{cma_stopping_condition}]
+#' @family stopping conditions
 #' @export
 stopOnOptValue = function(opt.value, tol = 1e-8) {
   assertNumber(opt.value, na.ok = FALSE)
@@ -85,6 +89,7 @@ stopOnOptValue = function(opt.value, tol = 1e-8) {
 #' @param budget [\code{integer(1)}]\cr
 #'   Time budget in seconds.
 #' @return [\code{cma_stopping_condition}]
+#' @family stopping conditions
 #' @export
 stopOnTimeBudget = function(budget) {
   assertInt(budget, na.ok = FALSE, lower = 1L)
@@ -140,6 +145,7 @@ stopOnTolX = function(tol = 10^(-12)) {
 #' direction change mean value?
 #'
 #' @return [\code{cma_stopping_condition}]
+#' @family stopping conditions
 #' @export
 stopOnNoEffectAxis = function() {
   return(makeStoppingCondition(
@@ -159,6 +165,7 @@ stopOnNoEffectAxis = function() {
 #' coordinate does not change mean value.
 #'
 #' @return [\code{cma_stopping_condition}]
+#' @family stopping conditions
 #' @export
 stopOnNoEffectCoord = function() {
   return(makeStoppingCondition(

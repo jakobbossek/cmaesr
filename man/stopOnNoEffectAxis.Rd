@@ -14,4 +14,12 @@ stopOnNoEffectAxis()
 Stopping condition: stop if addition of 0.1 * sigma in a principal axis
 direction change mean value?
 }
+\seealso{
+Other stopping.conditions: \code{\link{stopOnIndefCovMat}};
+  \code{\link{stopOnMaxIters}};
+  \code{\link{stopOnNoEffectCoord}};
+  \code{\link{stopOnOptParam}};
+  \code{\link{stopOnOptValue}};
+  \code{\link{stopOnTimeBudget}}
+}
 

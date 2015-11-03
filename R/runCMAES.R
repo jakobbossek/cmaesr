@@ -15,6 +15,9 @@
 #'   \item{sigma [\code{numeric(1)}]}{Initial step-size.}
 #'   \item{do.restart [\code{logical(1)}]}{Logical value indicating whether restarts should be triggered after certain
 #'   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
+#'   \item{restart.triggers [\code{character}]}{List of stopping condition codes / short names (see
+#'   \code{\link{makeStoppingCondition}}). All stopping conditions which are placed in this vector do trigger a restart
+#'   instead of leaving the main loop. Default is the empty character vector.}
 #'   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
 #'   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
 #'   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}})}.
@@ -128,6 +131,17 @@ runCMAES = function(
     stopf("There must be at least one stopping condition!")
   }
   assertList(stop.ons, min.len = 1L, types = "cma_stopping_condition")
+
+  # restart mechanism (IPOP-CMA-ES)
+  do.restart = getCMAESParameter(control, "do.restart", FALSE)
+  assertFlag(do.restart)
+  restart.triggers = getCMAESParameter(control, "restart.triggers", character(0L))
+  stop.ons.names = sapply(stop.ons, function(stop.on) stop.on$code)
+  if (!isSubset(restart.triggers, stop.ons.names)) {
+    stopf("Only codes / short names of active stopping conditions allowed as restart trigger, but '%s' are no stopping conditions.", collapse(setdiff(restart.triggers, stop.ons.names), sep = ", "))
+  }
+  restart.multiplier = getCMAESParameter(control, "restart.multiplier", 2)
+  assertNumber(restart.multiplier, lower = 1, na.ok = FALSE, finite = TRUE)
 
   #FIXME: default value should be derived from bounds
   sigma = getCMAESParameter(control, "sigma", 0.5)

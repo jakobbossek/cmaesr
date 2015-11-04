@@ -177,3 +177,24 @@ stopOnNoEffectCoord = function() {
     }
   ))
 }
+
+#' @title Stopping condition: stop if condition number of covariance matrix exceeds
+#' tolerance value.
+#'
+#' @param tol [\code{numeric(1)}]\cr
+#'   Tolerance value.
+#'   Default is \code{1e14}.
+#' @return [\code{cma_stopping_condition}]
+#' @family stopping conditions
+#' @export
+stopOnCondCov = function(tol = 1e14) {
+  assertNumber(tol, na.ok = FALSE, lower = 0, finite = TRUE)
+  force(tol)
+  return(makeStoppingCondition(
+    name = "conditionCov",
+    message = sprintf("Condition number of covariance matrix exceeds %f", tol),
+    stop.fun = function(envir = parent.frame()) {
+      return(kappa(envir$C) > tol)
+    }
+  ))
+}

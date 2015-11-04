@@ -23,7 +23,8 @@ Stopping condition: stop if euclidean distance of parameter is below
  some tolerance value.
 }
 \seealso{
-Other stopping.conditions: \code{\link{stopOnIndefCovMat}};
+Other stopping.conditions: \code{\link{stopOnCondCov}};
+  \code{\link{stopOnIndefCovMat}};
   \code{\link{stopOnMaxIters}};
   \code{\link{stopOnNoEffectAxis}};
   \code{\link{stopOnNoEffectCoord}};

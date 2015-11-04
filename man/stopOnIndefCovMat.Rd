@@ -13,7 +13,8 @@ stopOnIndefCovMat()
 Stopping condition: stop if covariance matrix is not positive definite anymore.
 }
 \seealso{
-Other stopping.conditions: \code{\link{stopOnMaxIters}};
+Other stopping.conditions: \code{\link{stopOnCondCov}};
+  \code{\link{stopOnMaxIters}};
   \code{\link{stopOnNoEffectAxis}};
   \code{\link{stopOnNoEffectCoord}};
   \code{\link{stopOnOptParam}};

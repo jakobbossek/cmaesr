@@ -61,7 +61,8 @@ getDefaultStoppingConditions = function() {
       stopOnIndefCovMat(),
       stopOnTolX(),
       stopOnNoEffectAxis(),
-      stopOnNoEffectCoord()
+      stopOnNoEffectCoord(),
+      stopOnCondCov()
     )
   )
 }

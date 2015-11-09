@@ -86,4 +86,5 @@ Advances in estimation of distribution algorithms. Springer, pp. 75-102.
 strategies: The covariance matrix adaptation. In Proceedings of the 1996 IEEE
 International Conference on Evolutionary Computation, pp. 312-317.
 }
+\keyword{optimize}
 

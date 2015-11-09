@@ -43,6 +43,8 @@
 #' The restart variant is not yet implemented. Hence, setting \code{do.restart}
 #' in \code{control} has no effect.
 #'
+#' @keywords optimize
+#'
 #' @param objective.fun [\code{smoof_function}]\cr
 #'   Numerical objective function of type \code{smoof_function}. The function
 #'   must expect a list of numerical values and return a scaler numerical value.

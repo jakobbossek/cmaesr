@@ -5,7 +5,7 @@ library(testthat)
 if (interactive()) {
   load_all(".")
 } else {
-  library(cma)
+  library(cmaesr)
 }
 
 test_dir("tests/testthat")

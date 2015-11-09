@@ -2,9 +2,13 @@
 #'
 #' @description
 #' Performs non-linear, non-convex optimization by means of the Covariance
-#' Matrix Adaption Evolution Strategy (CMA-ES).
+#' Matrix Adaption - Evolution Strategy (CMA-ES).
 #'
 #' @details
+#' This a pure R implementation of the popular CMA-ES optimizer for numeric
+#' black box optimization [2, 3]. It features a flexible system of stopping conditions
+#' and enables restarts [1], which can be triggered by arbitrary stopping conditions.
+#'
 #' You may pass additional parameters to the CMA-ES via the \code{control} argument.
 #' This argument must be a named list. The following control elements will be considered
 #' by the CMA-ES implementation:
@@ -45,11 +49,14 @@
 #' @param start.point [\code{numeric}]\cr
 #'   Initial solution vector. If \code{NULL}, one is generated randomly within the
 #'   box constraints offered by the paramter set of the objective function.
+#'   Default is \code{NULL}.
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
+#'   Default is \code{\link{makeSimpleMonitor}}.
 #' @param control [\code{list}]\cr
 #'   Futher paramters for the CMA-ES. See the details section for more in-depth
 #'   information. Stopping conditions are also defined here.
+#'   By default only some stopping conditions are passed. See \code{\link{getDefaultStoppingConditions}}.
 #' @return [\code{CMAES_result}] Result object.
 #'
 #' @examples
@@ -69,11 +76,9 @@
 cmaes = function(
   objective.fun,
   start.point = NULL,
-
 	monitor = makeSimpleMonitor(),
   control = list(
     stop.ons = c(
-      list(stopOnMaxIters(10L)),
       getDefaultStoppingConditions()
     )
   )) {

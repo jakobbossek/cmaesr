@@ -1,6 +1,7 @@
 # cmaesr: Covariance Matrix Adaption - Evolution Strategy in R
 
 [![CRAN Status Badge](http://www.r-pkg.org/badges/version/cmaesr)](http://cran.r-project.org/web/packages/cmaesr)
+[![CRAN Downloads](http://cranlogs.r-pkg.org/badges/cmaesr)](http://cran.rstudio.com/web/packages/cmaesr/index.html)
 [![Build Status](https://travis-ci.org/jakobbossek/cmaesr.svg?branch=master)](https://travis-ci.org/jakobbossek/cmaesr)
 [![Build status](https://ci.appveyor.com/api/projects/status/eu0nns2dsgocwntw/branch/master?svg=true)](https://ci.appveyor.com/project/jakobbossek/cmaesr/branch/master)
 [![Coverage Status](https://coveralls.io/repos/jakobbossek/cmaesr/badge.svg)](https://coveralls.io/r/jakobbossek/cmaesr)

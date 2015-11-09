@@ -13,10 +13,12 @@ The *cmaesr* package implements the popular [Covariance Matrix Adaption - Evolut
 * Possibility to enable [restarting](https://www.google.de/url?sa=t&rct=j&q=&esrc=s&source=web&cd=4&cad=rja&uact=8&ved=0CDgQFjADahUKEwiHyr2B3-fIAhVEOBoKHZFPBgs&url=https%3A%2F%2Fwww.lri.fr%2F~hansen%2Fcec2005ipopcmaes.pdf&usg=AFQjCNGwtYnwiRizaVZzbrfeXZjj-DYLtg&sig2=kMpEze_3Qe965UZ08wl-sw&bvm=bv.106130839,d.bGg) [1] with flexible declaration of restart-triggering stopping conditions.
 * Nice visualization of 2D optimization runs for, e.g., teaching purposes.
 
-[1] Auger and Hansen (2005). A Restart CMA Evolution Strategy With Increasing
-Population Size. In IEEE Congress on Evolutionary Computation, CEC 2005, Proceedings, pp. 1769-1776.
-[2] N. Hansen (2006). The CMA Evolution Strategy: A Comparing Review. In J.A. Lozano, P. Larranaga, I. Inza and E. Bengoetxea (Eds.). Towards a new evolutionary computation. Advances in estimation of distribution algorithms. Springer, pp. 75-102.
-[3] Hansen and Ostermeier (1996). Adapting arbitrary normal mutation distributions in evolution strategies: The covariance matrix adaptation. In Proceedings of the 1996 IEEE International Conference on Evolutionary Computation, pp. 312-317.
+[1] Auger and Hansen (2005). *A Restart CMA Evolution Strategy With Increasing
+Population Size.* In IEEE Congress on Evolutionary Computation, CEC 2005, Proceedings, pp. 1769-1776.
+
+[2] N. Hansen (2006). *The CMA Evolution Strategy: A Comparing Review.* In J.A. Lozano, P. Larranaga, I. Inza and E. Bengoetxea (Eds.). Towards a new evolutionary computation. Advances in estimation of distribution algorithms. Springer, pp. 75-102.
+
+[3] Hansen and Ostermeier (1996). *Adapting arbitrary normal mutation distributions in evolution strategies: The covariance matrix adaptation.* In Proceedings of the 1996 IEEE International Conference on Evolutionary Computation, pp. 312-317.
 
 ## Installation Instructions
 

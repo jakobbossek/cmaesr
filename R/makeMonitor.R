@@ -1,4 +1,4 @@
-#' Factory method for monitor objects.
+#' @title Factory method for monitor objects.
 #'
 #' @param before [\code{function}]\cr
 #'   Function called one time after initialization of the EA.
@@ -25,10 +25,9 @@ makeMonitor = function(before = NULL, step = NULL, after = NULL, ...) {
     class = "cma_monitor")
 }
 
-
-#' Generator for simple monitor.
+#' @title Generator for simple monitor.
 #'
-#' The simple monitor prints the iteration, current best parameter values and best fitness
+#' @description The simple monitor prints the iteration, current best parameter values and best fitness
 #' to the standard output.
 #'
 #' @return [\code{cma_monitor}]
@@ -50,14 +49,33 @@ makeSimpleMonitor = function() {
 	)
 }
 
-#' Generator for visualizing monitor.
+#' @title Generator for visualizing monitor.
 #'
-#' This generator visualizes the optimization process for two-dimensional functions
+#' @description This generator visualizes the optimization process for two-dimensional functions
 #' by means of \pkg{ggplot2}.
 #'
+#' @details The plot contains points representing the current population, the center
+#' of mass or mean value of the population respectively. Optionally an ellipsis
+#' represneting the normal distribution of the points can be depicted.
+#'
+#' @param show.last [\code{logical(1)}]\cr
+#'   Should the last population be visualized as well?
+#'   Default is \code{FALSE}.
+#' @param show.distribution [\code{logical(1)}]\cr
+#'   Should an ellipsis of the normal distribution be plotted?
+#'   Default is \code{TRUE}.
 #' @return [\code{cma_monitor}]
 #' @export
-makeVisualizingMonitor = function() {
+makeVisualizingMonitor = function(show.last = FALSE, show.distribution = TRUE) {
+  assertFlag(show.last, na.ok = FALSE)
+  assertFlag(show.distribution, na.ok = FALSE)
+
+  # store last population here
+  last.x = NULL
+  force(last.x)
+  force(show.last)
+  force(show.distribution)
+
   makeMonitor(
     before = function(envir = parent.frame()) {},
     step = function(envir = parent.frame()) {
@@ -70,17 +88,39 @@ makeVisualizingMonitor = function() {
         invisible(NULL)
       }
 
+      #FIXME: the following lines are ugly as sin, but refactor later.
       df = as.data.frame(t(cbind(x, m)))
-      df$Type = "Population"
+      df$Type = "Current population"
       df[nrow(df), "Type"] = "Mean"
       colnames(df) = c("x1", "x2", "Type")
+
+      # if last population is available, append
+      if (!is.null(last.x) && show.last) {
+        df2 = as.data.frame(t(last.x))
+        df2$Type = "Last population"
+        colnames(df2) = c("x1", "x2", "Type")
+        df = rbind(df, df2)
+      }
+
+      # type needs to be factor in order to use ggplot
       df$Type = as.factor(df$Type)
+      rownames(df) = NULL
 
       # use smoof's autoplot function to generate the contour plot
       pl = autoplot(envir$objective.fun)
       # ... and decorate with the points
       pl = pl + geom_point(data = df, aes_string(x = "x1", y = "x2", colour = "Type"))
       pl = pl + theme(legend.position = "bottom")
+
+      # show ellipsis of normal distribution
+      if (show.distribution) {
+        pop.idx = which(grepl("population", as.character(df$Type)))
+        pl = pl + stat_ellipse(data = df[pop.idx, , drop = FALSE], aes_string(colour = "Type"),
+          linetype = "dashed", type = "norm")
+      }
+
+      # update last population
+      last.x <<- x
       print(pl)
       pause()
     },
@@ -88,7 +128,7 @@ makeVisualizingMonitor = function() {
   )
 }
 
-#' Helper to call certain step function of a monitor.
+#' @title Helper to call certain step function of a monitor.
 #'
 #' @param monitor [\code{CMAES_monitor}]\cr
 #'   Monitor.

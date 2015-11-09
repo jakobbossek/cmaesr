@@ -23,6 +23,7 @@
 #'   \item{restart.triggers [\code{character}]}{List of stopping condition codes / short names (see
 #'   \code{\link{makeStoppingCondition}}). All stopping conditions which are placed in this vector do trigger a restart
 #'   instead of leaving the main loop. Default is the empty character vector, i.e., restart is not triggered.}
+#'   \item{max.restarts [\code{integer(1)}]}{Maximal number of restarts. Default is 0.}
 #'   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
 #'   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
 #'   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}})}.
@@ -117,22 +118,6 @@ cmaes = function(
 		assertClass(monitor, "cma_monitor")
 	}
 
-  # population and offspring size
-  lambda = getCMAESParameter(control, "lambda", 4L + floor(3 * log(n)))
-  assertInt(lambda, lower = 4)
-  mu = getCMAESParameter(control, "mu", floor(lambda / 2))
-  assertInt(mu)
-
-  # initialize recombination weights
-  weights = getCMAESParameter(control, "weights", log(mu + 0.5) - log(1:mu))
-  if (any(weights < 0)) {
-    stopf("All weights need to be positive, but there are %i negative ones.", sum(which(weights < 0)))
-  }
-  weights = weights / sum(weights)
-  if (!(sum(weights) - 1.0) < .Machine$double.eps) {
-    stopf("All 'weights' need to sum up to 1, but actually the sum is %f", sum(weights))
-  }
-
   # get stopping conditions
   stop.ons = getCMAESParameter(control, "stop.ons", NULL)
   if (is.null(stop.ons)) {
@@ -141,8 +126,6 @@ cmaes = function(
   assertList(stop.ons, min.len = 1L, types = "cma_stopping_condition")
 
   # restart mechanism (IPOP-CMA-ES)
-  do.restart = getCMAESParameter(control, "do.restart", FALSE)
-  assertFlag(do.restart)
   restart.triggers = getCMAESParameter(control, "restart.triggers", character(0L))
   stop.ons.names = sapply(stop.ons, function(stop.on) stop.on$code)
   if (!isSubset(restart.triggers, stop.ons.names)) {
@@ -150,32 +133,16 @@ cmaes = function(
   }
   restart.multiplier = getCMAESParameter(control, "restart.multiplier", 2)
   assertNumber(restart.multiplier, lower = 1, na.ok = FALSE, finite = TRUE)
+  max.restarts = getCMAESParameter(control, "max.restarts", 0L)
+  assertInt(max.restarts)
 
   #FIXME: default value should be derived from bounds
   sigma = getCMAESParameter(control, "sigma", 0.5)
   assertNumber(sigma, lower = 0L, finite = TRUE)
 
-	# variance-effectiveness / variance effective selection mass of sum w_i x_i
-	mu.eff = sum(weights)^2 / sum(weights^2) # chosen such that mu.eff ~ lambda/4
-
-	# step-size control
-	c.sigma = (mu.eff + 2) / (n + mu.eff + 5)
-	damps = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + c.sigma
-
-	# covariance matrix adaption parameters
-	c.c = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
-	c.1 = 2 / ((n + 1.3)^2 + mu.eff)
-	alpha.mu = 2L
-	c.mu = min(1 - c.1, alpha.mu * (mu.eff - 2 + 1/mu.eff) / ((n + 2)^2 + mu.eff))
-
 	# path for covariance matrix C and stepsize sigma
 	p.c = rep(0, n)
   p.sigma = rep(0, n)
-	B = diag(n)
-	D = diag(n)
-	BD = B %*% D
-  C = BD %*% t(BD) # C = B D^2 B^T = B B^T, since D equals I_n
-  Cinvsqrt = B %*% diag(1 / sqrt(diag(D))) %*% t(B)
 
   # Precompute E||N(0,I)||
 	chi.n = sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n^2))
@@ -190,111 +157,157 @@ cmaes = function(
   # init some termination criteria stuff
 	iter = 0L
   n.evals = 0L
-  n.restarts = 0L
 	start.time = Sys.time()
 
 	callMonitor(monitor, "before")
 
-  restarting = TRUE
-	repeat {
-    iter = iter + 1L
+  # somehow dirty trick to "really quit" if stopping condition is met and
+  # now more restart should be triggered.
+  do.terminate = FALSE
 
-    # create new population of search points
-		z = matrix(rnorm(n * lambda), ncol = lambda)
-    y = BD %*% z # ~ N(0, C)
-    x = m + sigma * y # ~ N(m, sigma^2 C)
-
-    # compute fitness values (each idividual is a column of x)
-    fitn = apply(x, 2L, function(x) objective.fun(x))
-
-    # update evaluation
-		n.evals = n.evals + lambda
-
-    # order fitness values
-    fitn.ordered.idx = order(fitn, decreasing = FALSE)
-    fitn.ordered = fitn[fitn.ordered.idx]
-
-    # lambda best individuals
-    fitn.best = fitn.ordered[1:mu]
-
-    # update best solution so far
-    if (fitn.ordered[1L] < best.fitness) {
-      best.fitness = fitn.ordered[1L]
-      best.param = x[, fitn.ordered.idx[1L], drop = TRUE]
-    }
-
-    # update mean value / center of mass
-    new.pop.idx = fitn.ordered.idx[1:mu]
-    x.best = x[, new.pop.idx]
-    m.old = m
-    m = drop(x.best %*% weights)
-
-    #FIXME: do we really need y.w and z.w as variables?
-    y.best = y[, new.pop.idx]
-    y.w = drop(y.best %*% weights)
-    z.best = z[, new.pop.idx]
-    z.w = drop(z.best %*% weights)
-
-		# Update evolution path with cumulative step-size adaption (CSA) / path length control
-    # For an explanation of the last factor see appendix A in https://www.lri.fr/~hansen/cmatutorial.pdf
-    p.sigma = (1 - c.sigma) * p.sigma + sqrt(c.sigma * (2 - c.sigma) * mu.eff) * (Cinvsqrt %*% y.w)
-		h.sigma = as.integer(norm(p.sigma) / sqrt(1 - (1 - c.sigma)^(2 * (iter + 1))) < chi.n * (1.4 + 2 / (n + 1)))
-
-		# Update covariance matrix
-    p.c = (1 - c.c) * p.c + h.sigma * sqrt(c.c * (2 - c.c) * mu.eff) * y.w
-    y = BD %*% z.best
-    delta.h.sigma = as.numeric((1 - h.sigma) * c.c * (2 - c.c) <= 1)
-		C = (1 - c.1 - c.mu) * C + c.1 * (p.c %*% t(p.c) + delta.h.sigma * C) + c.mu * y %*% diag(weights) %*% t(y)
-
-    # Update step-size sigma
-    sigma = sigma * exp(c.sigma / damps * ((norm(p.sigma) / chi.n) - 1))
-
-    # Finally do decomposition C = B D^2 B^T
-    e = eigen(C, symmetric = TRUE)
-    B = e$vectors
-    D = diag(sqrt(e$values))
-    BD = B %*% D
-    C = BD %*% t(BD)
-    Cinvsqrt = B %*% diag(1 / diag(D)) %*% t(B) # update C^-1/2
-
-    callMonitor(monitor, "step")
-
-    # escape flat fitness values
-    if (fitn.ordered[1L] == fitn.ordered[ceiling(0.7 * lambda)]) {
-      sigma = sigma * exp(0.2 + c.sigma / damps)
-      warningf("Flat fitness values; increasing mutation step-size. Consider reformulating the objective!")
-    }
-
-    # CHECK STOPPING CONDITIONS
-    # =========================
-    stop.obj = checkStoppingConditions(stop.ons)
-    #print(stop.obj)
-
-    # FIXME: this is copy and paste. Wrap another loop around the generational loop
-    restarting = FALSE
-    n.stop.codes = length(stop.obj$codes)
-    if (do.restart && any(stop.obj$codes %in% restart.triggers)) {
-      messagef("Restart tigger fired! Restarting!!!")
-      n.stop.codes = sum(!(stop.obj$codes %in% restart.triggers))
-      print(stop.obj$stop.msgs)
-      n.restarts = n.restarts + 1L
-      lambda = ceiling(restart.multiplier * lambda)
+  for (run in 0:max.restarts) {
+    # population and offspring size
+    if (run == 0) {
+      lambda = getCMAESParameter(control, "lambda", 4L + floor(3 * log(n)))
+      assertInt(lambda, lower = 4)
+      mu = getCMAESParameter(control, "mu", floor(lambda / 2))
+      assertInt(mu)
+    } else {
+      lambda = getCMAESParameter(control, "lambda", 4L + floor(3 * log(n)))
+      # increase population size (IPOP-CMA-ES)
+      lambda = ceiling(restart.multiplier^run * lambda)
       mu = floor(lambda / 2)
-      weights = log(mu + 0.5) - log(1:mu)
-      weights = weights / sum(weights)
-      restarting = TRUE
-      sigma = getCMAESParameter(control, "sigma", 0.5)
-      B = diag(n)
-      D = diag(n)
-      BD = B %*% D
-      C = BD %*% t(BD) # C = B D^2 B^T = B B^T, since D equals I_n
-      Cinvsqrt = B %*% diag(1 / sqrt(diag(D))) %*% t(B)
     }
 
-    if (n.stop.codes > 0L) {
+    # initialize recombination weights
+    weights = getCMAESParameter(control, "weights", log(mu + 0.5) - log(1:mu))
+    if (any(weights < 0)) {
+      stopf("All weights need to be positive, but there are %i negative ones.", sum(which(weights < 0)))
+    }
+    weights = weights / sum(weights)
+    if (!(sum(weights) - 1.0) < .Machine$double.eps) {
+      stopf("All 'weights' need to sum up to 1, but actually the sum is %f", sum(weights))
+    }
+
+    # variance-effectiveness / variance effective selection mass of sum w_i x_i
+    mu.eff = sum(weights)^2 / sum(weights^2) # chosen such that mu.eff ~ lambda/4
+
+    # step-size control
+    c.sigma = (mu.eff + 2) / (n + mu.eff + 5)
+    damps = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + c.sigma
+
+    # covariance matrix adaption parameters
+    c.c = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
+    c.1 = 2 / ((n + 1.3)^2 + mu.eff)
+    alpha.mu = 2L
+    c.mu = min(1 - c.1, alpha.mu * (mu.eff - 2 + 1/mu.eff) / ((n + 2)^2 + mu.eff))
+
+    # covariance matrix
+    sigma = getCMAESParameter(control, "sigma", 0.5)
+    B = diag(n)
+    D = diag(n)
+    BD = B %*% D
+    C = BD %*% t(BD) # C = B D^2 B^T = B B^T, since D equals I_n
+    Cinvsqrt = B %*% diag(1 / sqrt(diag(D))) %*% t(B)
+
+    # no restart trigger fired until now
+    restarting = FALSE
+
+    # break inner loop if terminating stopping condition active or
+    # restart triggered
+  	while (!restarting) {
+      iter = iter + 1L
+
+      # create new population of search points
+  		z = matrix(rnorm(n * lambda), ncol = lambda)
+      y = BD %*% z # ~ N(0, C)
+      x = m + sigma * y # ~ N(m, sigma^2 C)
+
+      # compute fitness values (each idividual is a column of x)
+      fitn = apply(x, 2L, function(x) objective.fun(x))
+
+      # update evaluation
+  		n.evals = n.evals + lambda
+
+      # order fitness values
+      fitn.ordered.idx = order(fitn, decreasing = FALSE)
+      fitn.ordered = fitn[fitn.ordered.idx]
+
+      # lambda best individuals
+      fitn.best = fitn.ordered[1:mu]
+
+      # update best solution so far
+      if (fitn.ordered[1L] < best.fitness) {
+        best.fitness = fitn.ordered[1L]
+        best.param = x[, fitn.ordered.idx[1L], drop = TRUE]
+      }
+
+      # update mean value / center of mass
+      new.pop.idx = fitn.ordered.idx[1:mu]
+      x.best = x[, new.pop.idx]
+      m.old = m
+      m = drop(x.best %*% weights)
+
+      #FIXME: do we really need y.w and z.w as variables?
+      y.best = y[, new.pop.idx]
+      y.w = drop(y.best %*% weights)
+      z.best = z[, new.pop.idx]
+      z.w = drop(z.best %*% weights)
+
+  		# Update evolution path with cumulative step-size adaption (CSA) / path length control
+      # For an explanation of the last factor see appendix A in https://www.lri.fr/~hansen/cmatutorial.pdf
+      p.sigma = (1 - c.sigma) * p.sigma + sqrt(c.sigma * (2 - c.sigma) * mu.eff) * (Cinvsqrt %*% y.w)
+  		h.sigma = as.integer(norm(p.sigma) / sqrt(1 - (1 - c.sigma)^(2 * (iter + 1))) < chi.n * (1.4 + 2 / (n + 1)))
+
+  		# Update covariance matrix
+      p.c = (1 - c.c) * p.c + h.sigma * sqrt(c.c * (2 - c.c) * mu.eff) * y.w
+      y = BD %*% z.best
+      delta.h.sigma = as.numeric((1 - h.sigma) * c.c * (2 - c.c) <= 1)
+  		C = (1 - c.1 - c.mu) * C + c.1 * (p.c %*% t(p.c) + delta.h.sigma * C) + c.mu * y %*% diag(weights) %*% t(y)
+
+      # Update step-size sigma
+      sigma = sigma * exp(c.sigma / damps * ((norm(p.sigma) / chi.n) - 1))
+
+      # Finally do decomposition C = B D^2 B^T
+      e = eigen(C, symmetric = TRUE)
+      B = e$vectors
+      D = diag(sqrt(e$values))
+      BD = B %*% D
+      C = BD %*% t(BD)
+      Cinvsqrt = B %*% diag(1 / diag(D)) %*% t(B) # update C^-1/2
+
+      callMonitor(monitor, "step")
+
+      # escape flat fitness values
+      if (fitn.ordered[1L] == fitn.ordered[ceiling(0.7 * lambda)]) {
+        sigma = sigma * exp(0.2 + c.sigma / damps)
+        warningf("Flat fitness values; increasing mutation step-size. Consider reformulating the objective!")
+      }
+
+      # CHECK STOPPING CONDITIONS
+      # =========================
+      stop.obj = checkStoppingConditions(stop.ons)
+
+      n.stop.codes = length(stop.obj$codes)
+      if (max.restarts > 0L && any(stop.obj$codes %in% restart.triggers)) {
+        messagef("Restart tigger fired! Restarting!!!")
+        n.stop.codes = sum(!(stop.obj$codes %in% restart.triggers))
+        restarting = TRUE
+      }
+
+      # check if CMA-ES should really quit, i.e., is there a stopping condition,
+      # that is active and does not trigger a restart?
+      if (!restarting && (n.stop.codes > 0L)) {
+        do.terminate = TRUE
+        break
+      }
+  	}
+
+    # really quit without more restarts
+    if (do.terminate) {
       break
     }
-	}
+  }
 
   callMonitor(monitor, "after")
 
@@ -305,6 +318,7 @@ cmaes = function(
 		n.evals = n.evals,
 		past.time = as.integer(difftime(Sys.time(), start.time, units = "secs")),
 		n.iters = iter - 1L,
+    n.restarts = run,
 		message = stop.obj$stop.msgs,
 		classes = "cma_result"
 	)

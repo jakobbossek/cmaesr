@@ -52,6 +52,7 @@ by the CMA-ES implementation:
   \item{restart.triggers [\code{character}]}{List of stopping condition codes / short names (see
   \code{\link{makeStoppingCondition}}). All stopping conditions which are placed in this vector do trigger a restart
   instead of leaving the main loop. Default is the empty character vector, i.e., restart is not triggered.}
+  \item{max.restarts [\code{integer(1)}]}{Maximal number of restarts. Default is 0.}
   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}})}.

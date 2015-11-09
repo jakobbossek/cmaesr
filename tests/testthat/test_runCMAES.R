@@ -117,3 +117,26 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
     }
   }
 })
+
+test_that("IPOP-CMA-ES works", {
+  # pretty stupid example here to check if restarts are triggered:
+  # We run CMA-ES for 5000 generations on Ackley and do trigger a restart
+  # for all default stopping conditions.
+  max.restarts = 3L
+  max.iters = 5000L
+
+  fn = makeAckleyFunction(2L)
+  par.set = getParamSet(fn)
+  lb = getLower(par.set); ub = getUpper(par.set)
+  control = list(
+    sigma = (ub[1L] - lb[1L]) / 2,
+    lambda = 10L,
+    stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions()),
+    max.restarts = 3L,
+    restart.triggers = c("indefCovMat", "conditionCov", "noEffectAxis", "noEffectCoord", "tolX")
+  )
+  res = cmaes(fn, control = control, monitor = NULL)
+  expect_true(is.numeric(res$best.fitness))
+  expect_true(is.integer(res$n.restarts))
+  expect_equal(res$n.restarts, max.restarts)
+})

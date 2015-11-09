@@ -1,6 +1,6 @@
 #' @title Factory method for monitor objects.
 #'
-#' @description Monitors can be pluged in the main \code{\link{runCMAES}} function.
+#' @description Monitors can be pluged in the main \code{\link{cmaes}} function.
 #' They have full access to the environment of the optimization routine and can
 #' be used to write/log/visualize relevant data in each iteration.
 #'

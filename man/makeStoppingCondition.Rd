@@ -29,7 +29,7 @@ Control params.}
 [\code{cma_stopping_condition}] Stopping condition object.
 }
 \description{
-A list of stopping conditions can be passed to the \code{\link{runCMAES}}
+A list of stopping conditions can be passed to the \code{\link{cmaes}}
 function. Instead of hardconding the stopping criteria into the main function
 they exist as stand-alone functions for maximal flexibility and extendability.
 }

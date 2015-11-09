@@ -23,7 +23,7 @@ Assume we want to minimize the 2D [Ackeley Function](http://www.sfu.ca/~ssurjano
 
 ```splus
 fn = makeAckleyFunction(dimensions = 2L)
-res = runCMAES(
+res = cmaes(
     fn, 
     max.iter = 100L,
     monitor = makeSimpleMonitor(),
@@ -35,7 +35,7 @@ print(res)
 For 2D functions a monitor for visualization is included.
 ```splus
 fn = makeSphereFunction(dimensions = 2L)
-res = runCMAES(
+res = cmaes(
     fn,
     max.iter = 15L,
     monitor = makeVisualizingMonitor(),

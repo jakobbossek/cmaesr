@@ -18,7 +18,7 @@ test_that("CMA-ES finds optimum of some BBOB functions", {
       opt = getGlobalOptimum(fn)
       lb = getLower(par.set)[1L]; ub = getUpper(par.set)[1L]
 
-      res = runCMAES(
+      res = cmaes(
         fn,
         start.point = runif(dim, min = lb, max = ub),
         monitor = NULL,
@@ -40,7 +40,7 @@ test_that("CMA-ES works on Sphere with default parameters", {
 
   for (dim in c(2, 3, 5)) {
     fn = makeSphereFunction(dim)
-    res = runCMAES(
+    res = cmaes(
       fn,
       monitor = NULL,
       control = list(
@@ -60,12 +60,12 @@ test_that("CMA-ES stops on invalid input", {
 
   # multi-objective functions not supported
   fn = makeZDT1Function(2L)
-  expect_error(runCMAES(fn, control = control))
+  expect_error(cmaes(fn, control = control))
 
   # noisy functions not allowed
   fn = makeSphereFunction(2L)
   attr(fn, "noisy") = TRUE
-  expect_error(runCMAES(fn, control = control))
+  expect_error(cmaes(fn, control = control))
 
   # mixed functions
   fn = makeSingleObjectiveFunction(
@@ -78,7 +78,7 @@ test_that("CMA-ES stops on invalid input", {
       makeDiscreteParam("y", values = c("a", "b"))
     )
   )
-  expect_error(runCMAES(fn, control = control))
+  expect_error(cmaes(fn, control = control))
 })
 
 test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", {
@@ -106,7 +106,7 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
         stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions())
       )
 
-      res = runCMAES(
+      res = cmaes(
         fn,
         control = control,
         monitor = NULL,

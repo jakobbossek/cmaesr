@@ -55,7 +55,7 @@
 #' @examples
 #' # generate objective function from smoof package
 #' fn = makeRosenbrockFunction(dimensions = 2L)
-#' res = runCMAES(
+#' res = cmaes(
 #'   fn,
 #'   monitor = NULL,
 #'   control = list(
@@ -66,7 +66,7 @@
 #' print(res)
 #'
 #' @export
-runCMAES = function(
+cmaes = function(
   objective.fun,
   start.point = NULL,
 

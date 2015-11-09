@@ -6,18 +6,19 @@
 #'
 #' @details
 #' You may pass additional parameters to the CMA-ES via the \code{control} argument.
-#' This must be a named list. The following elements will be considered by the
-#' algorithm:
+#' This argument must be a named list. The following control elements will be considered
+#' by the CMA-ES implementation:
 #' \describe{
 #'   \item{lambda [\code{integer(1)}]}{Number of offspring generaded in each generation.}
 #'   \item{mu [\code{integer(1)}]}{Number of individuals in each population. Defaults to \eqn{\lfloor \lambda / 2\rfloor}.}
 #'   \item{weights [\code{numeric}]}{Numeric vector of positive weights.}
 #'   \item{sigma [\code{numeric(1)}]}{Initial step-size.}
 #'   \item{do.restart [\code{logical(1)}]}{Logical value indicating whether restarts should be triggered after certain
-#'   stopping conditions fired. If \code{TRUE}, IPOP-CMA-ES is executed.}
+#'   stopping conditions are fired. If \code{TRUE} the CMA-ES is restarted with a
+#'   bigger population size (IPOP-CMA-ES).}
 #'   \item{restart.triggers [\code{character}]}{List of stopping condition codes / short names (see
 #'   \code{\link{makeStoppingCondition}}). All stopping conditions which are placed in this vector do trigger a restart
-#'   instead of leaving the main loop. Default is the empty character vector.}
+#'   instead of leaving the main loop. Default is the empty character vector, i.e., restart is not triggered.}
 #'   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
 #'   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
 #'   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}})}.

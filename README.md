@@ -7,7 +7,10 @@
 
 ## Description
 
-The *cmaesr* package implements the popular [Covariance Matrix Adaption - Evolution Strategy](https://www.lri.fr/~hansen/cmatutorial.pdf) optimizer for numerical optimization problems in pure R. The [restart variant](https://www.google.de/url?sa=t&rct=j&q=&esrc=s&source=web&cd=4&cad=rja&uact=8&ved=0CDgQFjADahUKEwiHyr2B3-fIAhVEOBoKHZFPBgs&url=https%3A%2F%2Fwww.lri.fr%2F~hansen%2Fcec2005ipopcmaes.pdf&usg=AFQjCNGwtYnwiRizaVZzbrfeXZjj-DYLtg&sig2=kMpEze_3Qe965UZ08wl-sw&bvm=bv.106130839,d.bGg) will be contained soon as well.
+The *cmaesr* package implements the popular [Covariance Matrix Adaption - Evolution Strategy](https://www.lri.fr/~hansen/cmatutorial.pdf) optimizer for numerical optimization problems in pure R. The main features of the package are:
+* Extensible S3 based system for stopping conditions
+* Possibility to enable [restarting](https://www.google.de/url?sa=t&rct=j&q=&esrc=s&source=web&cd=4&cad=rja&uact=8&ved=0CDgQFjADahUKEwiHyr2B3-fIAhVEOBoKHZFPBgs&url=https%3A%2F%2Fwww.lri.fr%2F~hansen%2Fcec2005ipopcmaes.pdf&usg=AFQjCNGwtYnwiRizaVZzbrfeXZjj-DYLtg&sig2=kMpEze_3Qe965UZ08wl-sw&bvm=bv.106130839,d.bGg) (flexible declaration of restart-triggering stopping conditions)
+* Nice visualization of 2D optimization runs for, e.g., teaching purposes
 
 ## Installation Instructions
 
@@ -22,28 +25,42 @@ devtools::install_github("jakobbossek/cmaesr")
 Assume we want to minimize the 2D [Ackeley Function](http://www.sfu.ca/~ssurjano/ackley.html). To accomplish this task with *cmaesr* we need to define the objective function as a [smoof](https://github.com/jakobbossek/smoof) function. This function is then passed with some control arguments to the main function of the packge.
 
 ```splus
+library(cmaesr)
+
+# first generate the objective smoof function
 fn = makeAckleyFunction(dimensions = 2L)
 res = cmaes(
     fn, 
-    max.iter = 100L,
     monitor = makeSimpleMonitor(),
-    control = list(sigma = 1.5, lambda = 50)
+    control = list(
+        sigma = 1.5, # initial step size
+        lambda = 50, # number of offspring
+        stop.ons = c(
+            list(stopOnMaxIters(100)), # stop after 100 iteration ...
+            getDefaultStoppingConditions() # ... or after some default stopping conditions
+        )
+    )
 )
 print(res)
 ```
 
 For 2D functions a monitor for visualization is included.
 ```splus
+library(cmaesr)
+
+# generate the objective function
 fn = makeSphereFunction(dimensions = 2L)
 res = cmaes(
     fn,
-    max.iter = 15L,
-    monitor = makeVisualizingMonitor(),
-    control = list(sigma = 1, lambda = 100)
+    monitor = makeVisualizingMonitor(
+        show.distribution = TRUE, show.last = TRUE
+    ),
+    control = list(
+        sigma = 1, lambda = 100,
+        stop.ons = list(stopOnMaxIters(15L))
+    )
 )
 ```
-
-**Info**: This package will most likely not be released on [CRAN](https://cran.r-project.org/). It will be merged to the [ecr](https://github.com/jakobbossek/ecr) package soon.
 
 ## Contact
 

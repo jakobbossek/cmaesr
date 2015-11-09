@@ -92,7 +92,7 @@ makeSimpleMonitor = function(max.params = 4L) {
 #' @return [\code{cma_monitor}]
 #' @export
 makeVisualizingMonitor = function(show.last = FALSE, show.distribution = TRUE,
-  xlim = NULL, ylim = NULL) {
+  xlim = NULL, ylim = NULL) { # nocov start
   assertFlag(show.last, na.ok = FALSE)
   assertFlag(show.distribution, na.ok = FALSE)
   !is.null(xlim) && assertNumeric(xlim, len = 2L, any.missing = FALSE)
@@ -193,7 +193,7 @@ makeVisualizingMonitor = function(show.last = FALSE, show.distribution = TRUE,
     },
     after = function(envir = parent.frame()) {}
   )
-}
+} # nocov end
 
 #' @title Helper to call certain step function of a monitor.
 #'

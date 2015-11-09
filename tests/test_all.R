@@ -1,3 +1,3 @@
 library(testthat)
-test_check("cma")
+test_check("cmaesr")
 

@@ -1,7 +1,8 @@
 Package: cmaesr
 Type: Package
 Title: Covariance Matrix Adaption Evolutionary Strategy
-Description: Pure R implementation of the Covariance Matrix Adaption Evolutionary Strategy (CMA-ES).
+Description: Pure R implementation of the Covariance Matrix Adaption
+    Evolutionary Strategy (CMA-ES).
 Version: 1.0
 Date: 2015-10-28
 Authors@R: c(person("Jakob", "Bossek", email = "j.bossek@gmail.com", role =
@@ -16,3 +17,4 @@ Depends:
     smoof (>= 1.0)
 Imports:
     ggplot2
+RoxygenNote: 5.0.0

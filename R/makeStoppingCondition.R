@@ -1,5 +1,9 @@
 #' @title Generate a stopping condition object.
 #'
+#' @description A list of stopping conditions can be passed to the \code{\link{runCMAES}}
+#' function. Instead of hardconding the stopping criteria into the main function
+#' they exist as stand-alone functions for maximal flexibility and extendability.
+#'
 #' @param name [\code{character(1)}]\cr
 #'   Name of the stopping condition.
 #' @param message [\code{character(1)}]\cr
@@ -52,6 +56,9 @@ checkStoppingConditions = function(stop.ons, envir = parent.frame()) {
 }
 
 #' @title Return list of default stopping conditions.
+#'
+#' @description Default stopping conditions which are active in the reference
+#' implementation by Nico Hansen in Python.
 #'
 #' @return [\code{list}]
 #' @export

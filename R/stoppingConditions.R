@@ -1,4 +1,6 @@
-#' @title Stopping condition: stop on maximal number of iterations.
+#' @title Stopping condition: maximal iterations.
+#'
+#' @description Stop on maximal number of iterations.
 #'
 #' @param max.iter [integer(1)]\cr
 #'   Maximal number of iterations.
@@ -18,7 +20,9 @@ stopOnMaxIters = function(max.iter = 100L) {
   ))
 }
 
-#' @title Stopping condition: stop if covariance matrix is not positive definite anymore.
+#' @title Stopping condition: indefinite covariance matrix.
+#'
+#' @description Stop if covariance matrix is not positive definite anymore.
 #'
 #' @return [\code{cma_stopping_condition}]
 #' @family stopping conditions
@@ -34,9 +38,10 @@ stopOnIndefCovMat = function() {
   ))
 }
 
-
-#' @title Stopping condition: stop if euclidean distance of parameter is below
-#'  some tolerance value.
+#' @title Stopping condition: optimal params.
+#'
+#' @description Stop if euclidean distance of parameter is below
+#' some tolerance value.
 #'
 #' @param opt.param [\code{numeric}]\cr
 #'   Known optimal parameter settings.
@@ -60,7 +65,9 @@ stopOnOptParam = function(opt.param, tol = 1e-8) {
   ))
 }
 
-#' @title Stopping condition: stop if best solution is close to optimal objective value.
+#' @title Stopping condition: optimal objective value.
+#'
+#' @description Stop if best solution is close to optimal objective value.
 #'
 #' @param opt.value [\code{numeric(1)}]\cr
 #'   Known optimal objective function value.
@@ -84,7 +91,9 @@ stopOnOptValue = function(opt.value, tol = 1e-8) {
   ))
 }
 
-#' @title Stopping condition: stop if maximal running time budget is reached.
+#' @title Stopping condition: maximal time.
+#'
+#' @description Stop if maximal running time budget is reached.
 #'
 #' @param budget [\code{integer(1)}]\cr
 #'   Time budget in seconds.
@@ -103,7 +112,9 @@ stopOnTimeBudget = function(budget) {
   ))
 }
 
-#' @title Stopping condition: stop if maximal number of function evaluations is reached.
+#' @title Stopping condition: maximal funtion evaluations.
+#'
+#' @description Stop if maximal number of function evaluations is reached.
 #'
 #' @param max.evals [\code{integer(1)}]\cr
 #'   Maximal number of allowed function evaluations.
@@ -121,7 +132,9 @@ stopOnMaxEvals = function(max.evals) {
   ))
 }
 
-#' @title Stopping condition: stop if the standard deviation falls below a tolerance value
+#' @title Stopping condition: low standard deviation.
+#'
+#' @description Stop if the standard deviation falls below a tolerance value
 #' in all coordinates?
 #'
 #' @param tol [\code{integer(1)}]\cr
@@ -141,8 +154,10 @@ stopOnTolX = function(tol = 10^(-12)) {
   ))
 }
 
-#' @title Stopping condition: stop if addition of 0.1 * sigma in a principal axis
-#' direction change mean value?
+#' @title Stopping condition: principal axis.
+#'
+#' @description Stop if addition of 0.1 * sigma in a principal axis
+#' direction does not change mean value.
 #'
 #' @return [\code{cma_stopping_condition}]
 #' @family stopping conditions
@@ -161,7 +176,9 @@ stopOnNoEffectAxis = function() {
   ))
 }
 
-#' @title Stopping condition: stop if addition of 0.2 standard deviations in any
+#' @title Stopping condition: standard deviation in coordinates.
+#'
+#' @description Stop if addition of 0.2 * standard deviations in any
 #' coordinate does not change mean value.
 #'
 #' @return [\code{cma_stopping_condition}]
@@ -178,7 +195,9 @@ stopOnNoEffectCoord = function() {
   ))
 }
 
-#' @title Stopping condition: stop if condition number of covariance matrix exceeds
+#' @title Stopping condition: high condition number.
+#'
+#' @description Stop if condition number of covariance matrix exceeds
 #' tolerance value.
 #'
 #' @param tol [\code{numeric(1)}]\cr

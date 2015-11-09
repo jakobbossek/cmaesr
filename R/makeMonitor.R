@@ -1,5 +1,9 @@
 #' @title Factory method for monitor objects.
 #'
+#' @description Monitors can be pluged in the main \code{\link{runCMAES}} function.
+#' They have full access to the environment of the optimization routine and can
+#' be used to write/log/visualize relevant data in each iteration.
+#'
 #' @param before [\code{function}]\cr
 #'   Function called one time after initialization of the EA.
 #' @param step [\code{function}]\cr
@@ -10,6 +14,7 @@
 #'   Not used.
 #' @return [\code{cma_monitor}]
 #'   Monitor object.
+#' @seealso \code{\link{makeSimpleMonitor}}, \code{\link{makeVisualizingMonitor}}
 #' @export
 makeMonitor = function(before = NULL, step = NULL, after = NULL, ...) {
   if (!is.null(before)) assertFunction(before)
@@ -129,6 +134,8 @@ makeVisualizingMonitor = function(show.last = FALSE, show.distribution = TRUE) {
 }
 
 #' @title Helper to call certain step function of a monitor.
+#'
+#' @description This funtions serves to call a specific monitor step.
 #'
 #' @param monitor [\code{CMAES_monitor}]\cr
 #'   Monitor.

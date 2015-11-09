@@ -182,10 +182,12 @@ runCMAES = function(
   # init some termination criteria stuff
 	iter = 0L
   n.evals = 0L
+  n.restarts = 0L
 	start.time = Sys.time()
 
 	callMonitor(monitor, "before")
 
+  restarting = TRUE
 	repeat {
     iter = iter + 1L
 
@@ -247,7 +249,7 @@ runCMAES = function(
     C = BD %*% t(BD)
     Cinvsqrt = B %*% diag(1 / diag(D)) %*% t(B) # update C^-1/2
 
-		callMonitor(monitor, "step")
+    callMonitor(monitor, "step")
 
     # escape flat fitness values
     if (fitn.ordered[1L] == fitn.ordered[ceiling(0.7 * lambda)]) {
@@ -259,7 +261,29 @@ runCMAES = function(
     # =========================
     stop.obj = checkStoppingConditions(stop.ons)
     #print(stop.obj)
-    if (length(stop.obj$stop.msgs) > 0L) {
+
+    # FIXME: this is copy and paste. Wrap another loop around the generational loop
+    restarting = FALSE
+    n.stop.codes = length(stop.obj$codes)
+    if (do.restart && any(stop.obj$codes %in% restart.triggers)) {
+      messagef("Restart tigger fired! Restarting!!!")
+      n.stop.codes = sum(!(stop.obj$codes %in% restart.triggers))
+      print(stop.obj$stop.msgs)
+      n.restarts = n.restarts + 1L
+      lambda = ceiling(restart.multiplier * lambda)
+      mu = floor(lambda / 2)
+      weights = log(mu + 0.5) - log(1:mu)
+      weights = weights / sum(weights)
+      restarting = TRUE
+      sigma = getCMAESParameter(control, "sigma", 0.5)
+      B = diag(n)
+      D = diag(n)
+      BD = B %*% D
+      C = BD %*% t(BD) # C = B D^2 B^T = B B^T, since D equals I_n
+      Cinvsqrt = B %*% diag(1 / sqrt(diag(D))) %*% t(B)
+    }
+
+    if (n.stop.codes > 0L) {
       break
     }
 	}

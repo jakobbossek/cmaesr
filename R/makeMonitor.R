@@ -69,17 +69,42 @@ makeSimpleMonitor = function() {
 #' @param show.distribution [\code{logical(1)}]\cr
 #'   Should an ellipsis of the normal distribution be plotted?
 #'   Default is \code{TRUE}.
+#' @param xlim [\code{numeric(2)} || \code{NULL}]\cr
+#'   Limits for the first axis.
+#'   Default is \code{NULL}, i.e., the bounds are determined automatically.
+#' @param ylim [\code{numeric(2)} || \code{NULL}]\cr
+#'   Limits for the second axis.
+#'   Default is \code{NULL}, i.e., the bounds are determined automatically.
 #' @return [\code{cma_monitor}]
 #' @export
-makeVisualizingMonitor = function(show.last = FALSE, show.distribution = TRUE) {
+makeVisualizingMonitor = function(show.last = FALSE, show.distribution = TRUE,
+  xlim = NULL, ylim = NULL) {
   assertFlag(show.last, na.ok = FALSE)
   assertFlag(show.distribution, na.ok = FALSE)
+  !is.null(xlim) && assertNumeric(xlim, len = 2L, any.missing = FALSE)
+  !is.null(ylim) && assertNumeric(ylim, len = 2L, any.missing = FALSE)
+
+  if (!is.null(xlim)) {
+    if (xlim[1L] > xlim[2L]) {
+      stopf("First component of xlim must be lower than the second.")
+    }
+  }
+
+  if (!is.null(ylim)) {
+     if (ylim[1L] > ylim[2L]) {
+      stopf("First component of xlim must be lower than the second.")
+    }
+  }
 
   # store last population here
   last.x = NULL
+
+  # force variables
   force(last.x)
   force(show.last)
   force(show.distribution)
+  force(xlim)
+  force(ylim)
 
   makeMonitor(
     before = function(envir = parent.frame()) {},
@@ -112,7 +137,30 @@ makeVisualizingMonitor = function(show.last = FALSE, show.distribution = TRUE) {
       rownames(df) = NULL
 
       # use smoof's autoplot function to generate the contour plot
-      pl = autoplot(envir$objective.fun)
+      obj.fun = envir$objective.fun
+      par.set = getParamSet(obj.fun)
+      lower = getLower(par.set)
+      upper = getUpper(par.set)
+
+      ranges = apply(x, 1L, range)
+
+      lower.x = coalesce(xlim[1L], min(lower[1L], ranges[1L, 1L]))
+      lower.y = coalesce(ylim[1L], min(lower[2L], ranges[1L, 2L]))
+      upper.x = coalesce(xlim[2L], max(upper[1L], ranges[2L, 1L]))
+      upper.y = coalesce(xlim[2L], max(upper[1L], ranges[2L, 2L]))
+
+      # build up data frame
+      sequence.x1 = seq(lower.x, upper.x, length.out = 150L)
+      sequence.x2 = seq(lower.y, upper.y, length.out = 150L)
+
+      data = expand.grid(sequence.x1, sequence.x2)
+      names(data) = c("x1", "x2")
+      data$z = apply(data, 1L, obj.fun)
+
+      # ... draw contour plot
+      pl = ggplot(data,aes_string(x = "x1", y = "x2"))
+      pl = pl + stat_contour(aes_string(z = "z", fill = NULL), colour = "gray", alpha = I(0.8))
+
       # ... and decorate with the points
       pl = pl + geom_point(data = df, aes_string(x = "x1", y = "x2", colour = "Type"))
       pl = pl + theme(legend.position = "bottom")

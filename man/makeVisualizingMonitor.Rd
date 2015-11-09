@@ -4,7 +4,8 @@
 \alias{makeVisualizingMonitor}
 \title{Generator for visualizing monitor.}
 \usage{
-makeVisualizingMonitor(show.last = FALSE, show.distribution = TRUE)
+makeVisualizingMonitor(show.last = FALSE, show.distribution = TRUE,
+  xlim = NULL, ylim = NULL)
 }
 \arguments{
 \item{show.last}{[\code{logical(1)}]\cr
@@ -14,6 +15,14 @@ Default is \code{FALSE}.}
 \item{show.distribution}{[\code{logical(1)}]\cr
 Should an ellipsis of the normal distribution be plotted?
 Default is \code{TRUE}.}
+
+\item{xlim}{[\code{numeric(2)} || \code{NULL}]\cr
+Limits for the first axis.
+Default is \code{NULL}, i.e., the bounds are determined automatically.}
+
+\item{ylim}{[\code{numeric(2)} || \code{NULL}]\cr
+Limits for the second axis.
+Default is \code{NULL}, i.e., the bounds are determined automatically.}
 }
 \value{
 [\code{cma_monitor}]

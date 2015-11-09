@@ -35,18 +35,32 @@ makeMonitor = function(before = NULL, step = NULL, after = NULL, ...) {
 #' @description The simple monitor prints the iteration, current best parameter values and best fitness
 #' to the standard output.
 #'
+#' @param max.params [\code{integer(1)}]\cr
+#'   Maximal number of parameters to show in output.
 #' @return [\code{cma_monitor}]
 #' @export
-makeSimpleMonitor = function() {
+makeSimpleMonitor = function(max.params = 4L) {
+  assertInt(max.params, na.ok = FALSE)
+  force(max.params)
 	makeMonitor(
 		before = function(envir = parent.frame()) {
       catf("Starting optimization.")
     },
 		step = function(envir = parent.frame()) {
-      best.param = list(envir$best.param)
-      names(best.param) = getParamIds(envir$par.set)
-      pars = paramValueToString(envir$par.set, x = best.param, num.format = "%.4f")
-			catf("Iteration %i: %s, y = %.4f", envir$iter, pars, envir$best.fitness)
+      # determine number of parameters to show
+      max.param.id = min(getNumberOfParameters(envir$objective.fun), max.params)
+
+      # get best parameter
+      best.param = as.numeric(envir$best.param[seq(max.param.id)])
+
+      # name parameters
+      names(best.param) = getParamIds(envir$par.set, repeated = TRUE, with.nr = TRUE)[seq(max.param.id)]
+
+      # build param string
+      par.string = collapse(paste(names(best.param), sprintf("%+10.4f", best.param), sep = ": "), sep = "   ")
+
+      # combine with fitness value and iteration counter
+			catf("Iteration %4.i: %s, y = %+10.4f", envir$iter, par.string, envir$best.fitness)
 		},
 		after = function(envir = parent.frame()) {
       catf("Optimization terminated.")

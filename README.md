@@ -13,7 +13,7 @@ The *cmaesr* package implements the popular [Covariance Matrix Adaption - Evolut
 * Possibility to enable [restarting](https://www.google.de/url?sa=t&rct=j&q=&esrc=s&source=web&cd=4&cad=rja&uact=8&ved=0CDgQFjADahUKEwiHyr2B3-fIAhVEOBoKHZFPBgs&url=https%3A%2F%2Fwww.lri.fr%2F~hansen%2Fcec2005ipopcmaes.pdf&usg=AFQjCNGwtYnwiRizaVZzbrfeXZjj-DYLtg&sig2=kMpEze_3Qe965UZ08wl-sw&bvm=bv.106130839,d.bGg) [1] with flexible declaration of restart-triggering stopping conditions.
 * Nice visualization of 2D optimization runs for, e.g., teaching purposes.
 
-![Visualization of the distribution in an examplary optimization run on the sphere function](https://github.com/jakobbossek/cmaesr/blob/master/images/instance_examples.png)
+![Visualization of the distribution in an examplary optimization run on the sphere function](https://github.com/jakobbossek/cmaesr/blob/master/images/sphere_cma_es_visualization.png)
 
 [1] Auger and Hansen (2005). *A Restart CMA Evolution Strategy With Increasing
 Population Size.* In IEEE Congress on Evolutionary Computation, CEC 2005, Proceedings, pp. 1769-1776.

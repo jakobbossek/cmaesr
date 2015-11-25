@@ -296,7 +296,7 @@ cmaes = function(
 
       n.stop.codes = length(stop.obj$codes)
       if (max.restarts > 0L && any(stop.obj$codes %in% restart.triggers)) {
-        messagef("Restart tigger fired! Restarting!!!")
+        messagef("Restart trigger fired! Restarting!!!")
         n.stop.codes = sum(!(stop.obj$codes %in% restart.triggers))
         restarting = TRUE
       }

@@ -154,6 +154,9 @@ cmaes = function(
   # set initial distribution mean
 	m = start.point
 
+  # logs
+  population.trace = list()
+
   # init some termination criteria stuff
 	iter = 0L
   n.evals = 0L
@@ -254,6 +257,9 @@ cmaes = function(
       z.best = z[, new.pop.idx]
       z.w = drop(z.best %*% weights)
 
+      # log population
+      population.trace[[iter]] = z.best
+
   		# Update evolution path with cumulative step-size adaption (CSA) / path length control
       # For an explanation of the last factor see appendix A in https://www.lri.fr/~hansen/cmatutorial.pdf
       p.sigma = (1 - c.sigma) * p.sigma + sqrt(c.sigma * (2 - c.sigma) * mu.eff) * (Cinvsqrt %*% y.w)
@@ -319,6 +325,7 @@ cmaes = function(
 		past.time = as.integer(difftime(Sys.time(), start.time, units = "secs")),
 		n.iters = iter - 1L,
     n.restarts = run,
+    population.trace = population.trace,
 		message = stop.obj$stop.msgs,
 		classes = "cma_result"
 	)

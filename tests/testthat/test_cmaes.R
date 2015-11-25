@@ -60,17 +60,17 @@ test_that("CMA-ES stops on invalid input", {
 
   # multi-objective functions not supported
   fn = makeZDT1Function(2L)
-  expect_error(cmaes(fn, control = control))
+  expect_error(cmaes(fn, monitor = NULL, control = control))
 
   # noisy functions not allowed
   fn = makeSphereFunction(2L)
   attr(fn, "noisy") = TRUE
-  expect_error(cmaes(fn, control = control))
+  expect_error(cmaes(fn, monitor = NULL, control = control))
 
   # infinite bounds
   fn = makeSphereFunction(2L)
   attr(fn, "par.set") = makeNumericParamSet("x", len = 2L, lower = -Inf, upper = Inf)
-  expect_error(cmaes(fn, control = control), regexp = "bounds")
+  expect_error(cmaes(fn, monitor = NULL, control = control), regexp = "bounds")
 
   # negative weights
   fn = makeSphereFunction(2L)
@@ -79,16 +79,16 @@ test_that("CMA-ES stops on invalid input", {
   control2$weights = runif(control2$mu)
   control2$weights[c(1, 3)] = -control2$weights[c(1, 3)]
   control2$stop.ons = getDefaultStoppingConditions()
-  expect_error(cmaes(fn, control = control2), regexp = "negative")
+  expect_error(cmaes(fn, monitor = NULL, control = control2), regexp = "negative")
 
   # missing stopping conditions
   fn = makeSphereFunction(2L)
   control = list(stop.ons = NULL, stop.ons = getDefaultStoppingConditions())
-  expect_error(cmaes(fn, control = control), regexp = "stopping condition")
+  expect_error(cmaes(fn, monitor = NULL, control = control), regexp = "stopping condition")
 
   # invalid "short name" as restart trigger
   control = list(restart.triggers = c("invalid_trigger"), stop.ons = getDefaultStoppingConditions())
-  expect_error(cmaes(fn, control = control), regexp = "no stopping condition")
+  expect_error(cmaes(fn, monitor = NULL, control = control), regexp = "no stopping condition")
 
   # mixed functions
   fn = makeSingleObjectiveFunction(
@@ -101,7 +101,7 @@ test_that("CMA-ES stops on invalid input", {
       makeDiscreteParam("y", values = c("a", "b"))
     )
   )
-  expect_error(cmaes(fn, control = control))
+  expect_error(cmaes(fn, monitor = NULL, control = control))
 })
 
 test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", {
@@ -132,7 +132,7 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
       res = cmaes(
         fn,
         control = control,
-        monitor = NULL,
+        monitor = NULL
       )
       expect_true(is.numeric(res$best.fitness))
       expect_true(abs(res$best.fitness - opt$value) < tol,

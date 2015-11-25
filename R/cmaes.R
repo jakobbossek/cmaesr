@@ -286,7 +286,9 @@ cmaes = function(
       # escape flat fitness values
       if (fitn.ordered[1L] == fitn.ordered[ceiling(0.7 * lambda)]) {
         sigma = sigma * exp(0.2 + c.sigma / damps)
-        warningf("Flat fitness values; increasing mutation step-size. Consider reformulating the objective!")
+        if (!is.null(monitor)) {
+          warningf("Flat fitness values; increasing mutation step-size. Consider reformulating the objective!")
+        }
       }
 
       # CHECK STOPPING CONDITIONS
@@ -295,7 +297,9 @@ cmaes = function(
 
       n.stop.codes = length(stop.obj$codes)
       if (max.restarts > 0L && any(stop.obj$codes %in% restart.triggers)) {
-        messagef("Restart trigger fired! Restarting!!!")
+        if (!is.null(monitor)) {
+          messagef("Restart trigger fired! Restarting!!!")
+        }
         n.stop.codes = sum(!(stop.obj$codes %in% restart.triggers))
         restarting = TRUE
       }

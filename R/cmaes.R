@@ -222,7 +222,11 @@ cmaes = function(
       x = m + sigma * y # ~ N(m, sigma^2 C)
 
       # compute fitness values (each idividual is a column of x)
-      fitn = apply(x, 2L, function(x) objective.fun(x))
+      fitn = if (isVectorized(objective.fun)) {
+        objective.fun(x)
+      } else {
+        apply(x, 2L, function(xx) objective.fun(xx))
+      }
 
       # update evaluation
   		n.evals = n.evals + lambda

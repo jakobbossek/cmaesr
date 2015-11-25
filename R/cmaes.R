@@ -17,13 +17,12 @@
 #'   \item{mu [\code{integer(1)}]}{Number of individuals in each population. Defaults to \eqn{\lfloor \lambda / 2\rfloor}.}
 #'   \item{weights [\code{numeric}]}{Numeric vector of positive weights.}
 #'   \item{sigma [\code{numeric(1)}]}{Initial step-size.}
-#'   \item{do.restart [\code{logical(1)}]}{Logical value indicating whether restarts should be triggered after certain
-#'   stopping conditions are fired. If \code{TRUE} the CMA-ES is restarted with a
-#'   bigger population size (IPOP-CMA-ES).}
 #'   \item{restart.triggers [\code{character}]}{List of stopping condition codes / short names (see
 #'   \code{\link{makeStoppingCondition}}). All stopping conditions which are placed in this vector do trigger a restart
 #'   instead of leaving the main loop. Default is the empty character vector, i.e., restart is not triggered.}
-#'   \item{max.restarts [\code{integer(1)}]}{Maximal number of restarts. Default is 0.}
+#'   \item{max.restarts [\code{integer(1)}]}{Maximal number of restarts. Default is 0. If set
+#'   to >= 1, the CMA-ES is restarted with a higher population size if one of the
+#'   \code{restart.triggers} is activated.}
 #'   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
 #'   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
 #'   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}})}.
@@ -39,10 +38,6 @@
 #' [3] Hansen and Ostermeier (1996). Adapting arbitrary normal mutation distributions in evolution
 #' strategies: The covariance matrix adaptation. In Proceedings of the 1996 IEEE
 #' International Conference on Evolutionary Computation, pp. 312-317.
-#'
-#' @note
-#' The restart variant is not yet implemented. Hence, setting \code{do.restart}
-#' in \code{control} has no effect.
 #'
 #' @keywords optimize
 #'

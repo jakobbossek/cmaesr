@@ -95,8 +95,10 @@ makeVisualizingMonitor = function(show.last = FALSE, show.distribution = TRUE,
   xlim = NULL, ylim = NULL) { # nocov start
   assertFlag(show.last, na.ok = FALSE)
   assertFlag(show.distribution, na.ok = FALSE)
-  !is.null(xlim) && assertNumeric(xlim, len = 2L, any.missing = FALSE)
-  !is.null(ylim) && assertNumeric(ylim, len = 2L, any.missing = FALSE)
+  if (!is.null(xlim))
+    assertNumeric(xlim, len = 2L, any.missing = FALSE)
+  if (!is.null(ylim))
+    assertNumeric(ylim, len = 2L, any.missing = FALSE)
 
   if (!is.null(xlim)) {
     if (xlim[1L] > xlim[2L]) {

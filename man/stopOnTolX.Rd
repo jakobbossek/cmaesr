@@ -4,7 +4,7 @@
 \alias{stopOnTolX}
 \title{Stopping condition: low standard deviation.}
 \usage{
-stopOnTolX(tol = 10^(-12))
+stopOnTolX(tol = 1e-12)
 }
 \arguments{
 \item{tol}{[\code{integer(1)}]\cr

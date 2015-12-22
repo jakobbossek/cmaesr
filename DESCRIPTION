@@ -20,4 +20,4 @@ Imports:
 Suggests:
     testthat
 ByteCompile: yes
-RoxygenNote: 5.0.0
+RoxygenNote: 5.0.1

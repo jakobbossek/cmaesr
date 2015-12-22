@@ -1,10 +1,10 @@
 context("CMA-ES run")
 
 test_that("CMA-ES finds optimum of some BBOB functions", {
-	max.iters = 50L
+	max.iters = 100L
 	lambda = 50L
 	sigma = 1.5
-  dims = c(2, 3, 4, 5)
+  dims = c(2, 3, 4, 5, 10, 15, 20)
 
   # accepted tolerance value for parameter and fitness values
   tol = 0.05
@@ -35,8 +35,8 @@ test_that("CMA-ES finds optimum of some BBOB functions", {
 
 test_that("CMA-ES works on Sphere with default parameters", {
   # accepted tolerance value for parameter and fitness values
-  tol = 0.05
-  max.iters = 50L
+  tol = 0.1
+  max.iters = 100L
 
   for (dim in c(2, 3, 5)) {
     fn = makeSphereFunction(dim)
@@ -44,7 +44,6 @@ test_that("CMA-ES works on Sphere with default parameters", {
       fn,
       monitor = NULL,
       control = list(
-        sigma = 1,
         lambda = dim * 2 * 10,
         stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions())
       )

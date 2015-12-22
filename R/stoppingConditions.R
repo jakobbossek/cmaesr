@@ -33,7 +33,7 @@ stopOnIndefCovMat = function() {
     message = "Covariance matrix is not numerically positive definite.",
     stop.fun = function(envir = parent.frame()) {
       e.values = envir$e$values
-      return(any(e.values <= sqrt(.Machine$double.eps) * abs(max(e.values))))
+      return(any(e.values <= sqrt(.Machine$double.eps) * abs(e.values[1L])))
     }
   ))
 }
@@ -141,8 +141,8 @@ stopOnMaxEvals = function(max.evals) {
 #'   Tolerance value.
 #' @return [\code{cma_stopping_condition}]
 #' @export
-#FIXME: default value is 10^(-12) * sigma. Here we have no access to the sigma value.
-stopOnTolX = function(tol = 10^(-12)) {
+#FIXME: default value is 1e-12 * sigma. Here we have no access to the sigma value.
+stopOnTolX = function(tol = 1e-12) {
   assertInt(tol, na.ok = FALSE)
   force(tol)
   return(makeStoppingCondition(
@@ -170,8 +170,8 @@ stopOnNoEffectAxis = function() {
       ii = (envir$iter %% envir$n) + 1L
       ui = envir$e$vectors[, ii]
       lambdai = sqrt(envir$e$values[ii])
-      m.old = envir$m.old
-      return(sum((m.old - (m.old + 0.1 * envir$sigma * lambdai * ui))^2) < .Machine$double.eps)
+      m = envir$m
+      return(sum((m - (m + 0.1 * envir$sigma * lambdai * ui))^2) < .Machine$double.eps)
     }
   ))
 }
@@ -189,8 +189,8 @@ stopOnNoEffectCoord = function() {
     name = "noEffectCoord",
     message = "Addition of 0.2 times sigma in any coordinate does not change mean value.",
     stop.fun = function(envir = parent.frame()) {
-      m.old = envir$m.old
-      return(sum((m.old - (m.old + 0.2 * envir$sigma))^2) < .Machine$double.eps)
+      m = envir$m
+      return(sum((m - (m + 0.2 * envir$sigma))^2) < .Machine$double.eps)
     }
   ))
 }

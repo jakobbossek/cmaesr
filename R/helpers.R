@@ -11,3 +11,7 @@
 getCMAESParameter = function(control, what, default) {
   return(coalesce(control[[what]], default))
 }
+
+norm2 = function(x) {
+  return(drop(sqrt(crossprod(x))))
+}

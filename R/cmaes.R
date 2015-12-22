@@ -135,10 +135,6 @@ cmaes = function(
   sigma = getCMAESParameter(control, "sigma", 0.5)
   assertNumber(sigma, lower = 0L, finite = TRUE)
 
-	# path for covariance matrix C and stepsize sigma
-	p.c = rep(0, n)
-  p.sigma = rep(0, n)
-
   # Precompute E||N(0,I)||
 	chi.n = sqrt(n) * (1 - 1 / (4 * n) + 1 / (21 * n^2))
 
@@ -177,6 +173,10 @@ cmaes = function(
       mu = floor(lambda / 2)
     }
 
+    # path for covariance matrix C and stepsize sigma
+    pc = rep(0, n)
+    ps = rep(0, n)
+
     # initialize recombination weights
     weights = getCMAESParameter(control, "weights", log(mu + 0.5) - log(1:mu))
     if (any(weights < 0)) {
@@ -191,14 +191,14 @@ cmaes = function(
     mu.eff = sum(weights)^2 / sum(weights^2) # chosen such that mu.eff ~ lambda/4
 
     # step-size control
-    c.sigma = (mu.eff + 2) / (n + mu.eff + 5)
-    damps = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + c.sigma
+    cs = (mu.eff + 2) / (n + mu.eff + 5)
+    ds = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + cs # damping factor
 
     # covariance matrix adaption parameters
-    c.c = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
-    c.1 = 2 / ((n + 1.3)^2 + mu.eff)
+    cc = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
+    c1 = 2 / ((n + 1.3)^2 + mu.eff)
     alpha.mu = 2L
-    c.mu = min(1 - c.1, alpha.mu * (mu.eff - 2 + 1/mu.eff) / ((n + 2)^2 + mu.eff))
+    cmu = min(1 - c1, alpha.mu * (mu.eff - 2 + 1/mu.eff) / ((n + 2)^2 + mu.eff))
 
     # covariance matrix
     sigma = getCMAESParameter(control, "sigma", 0.5)
@@ -217,7 +217,7 @@ cmaes = function(
       iter = iter + 1L
 
       # create new population of search points
-  		z = matrix(rnorm(n * lambda), ncol = lambda)
+  		z = matrix(rnorm(n * lambda), ncol = lambda) # ~ N(0, I)
       y = BD %*% z # ~ N(0, C)
       x = m + sigma * y # ~ N(m, sigma^2 C)
 
@@ -235,9 +235,6 @@ cmaes = function(
       fitn.ordered.idx = order(fitn, decreasing = FALSE)
       fitn.ordered = fitn[fitn.ordered.idx]
 
-      # lambda best individuals
-      fitn.best = fitn.ordered[1:mu]
-
       # update best solution so far
       if (fitn.ordered[1L] < best.fitness) {
         best.fitness = fitn.ordered[1L]
@@ -246,46 +243,45 @@ cmaes = function(
 
       # update mean value / center of mass
       new.pop.idx = fitn.ordered.idx[1:mu]
-      x.best = x[, new.pop.idx]
+      x.best = x[, new.pop.idx, drop = FALSE]
       m.old = m
       m = drop(x.best %*% weights)
 
-      #FIXME: do we really need y.w and z.w as variables?
-      y.best = y[, new.pop.idx]
+      y.best = y[, new.pop.idx, drop = FALSE]
       y.w = drop(y.best %*% weights)
-      z.best = z[, new.pop.idx]
+      z.best = z[, new.pop.idx, drop = FALSE]
       z.w = drop(z.best %*% weights)
 
       # log population
-      population.trace[[iter]] = z.best
+      population.trace[[iter]] = x.best
 
   		# Update evolution path with cumulative step-size adaption (CSA) / path length control
       # For an explanation of the last factor see appendix A in https://www.lri.fr/~hansen/cmatutorial.pdf
-      p.sigma = (1 - c.sigma) * p.sigma + sqrt(c.sigma * (2 - c.sigma) * mu.eff) * (Cinvsqrt %*% y.w)
-  		h.sigma = as.integer(norm(p.sigma) / sqrt(1 - (1 - c.sigma)^(2 * (iter + 1))) < chi.n * (1.4 + 2 / (n + 1)))
+      ps = (1 - cs) * ps + sqrt(cs * (2 - cs) * mu.eff) * (Cinvsqrt %*% y.w)
+  		h.sigma = as.integer(norm2(ps) / sqrt(1 - (1 - cs)^(2 * (iter + 1))) < chi.n * (1.4 + 2 / (n + 1)))
 
   		# Update covariance matrix
-      p.c = (1 - c.c) * p.c + h.sigma * sqrt(c.c * (2 - c.c) * mu.eff) * y.w
+      pc = (1 - cc) * pc + h.sigma * sqrt(cc * (2 - cc) * mu.eff) * y.w
       y = BD %*% z.best
-      delta.h.sigma = as.numeric((1 - h.sigma) * c.c * (2 - c.c) <= 1)
-  		C = (1 - c.1 - c.mu) * C + c.1 * (p.c %*% t(p.c) + delta.h.sigma * C) + c.mu * y %*% diag(weights) %*% t(y)
+      delta.h.sigma = as.numeric((1 - h.sigma) * cc * (2 - cc) <= 1)
+  		C = (1 - c1 - cmu) * C + c1 * (pc %*% t(pc) + delta.h.sigma * C) + cmu * y %*% diag(weights) %*% t(y)
 
       # Update step-size sigma
-      sigma = sigma * exp(c.sigma / damps * ((norm(p.sigma) / chi.n) - 1))
+      sigma = sigma * exp(cs / ds * ((norm2(ps) / chi.n) - 1))
 
       # Finally do decomposition C = B D^2 B^T
       e = eigen(C, symmetric = TRUE)
       B = e$vectors
       D = diag(sqrt(e$values))
       BD = B %*% D
-      C = BD %*% t(BD)
+      #C = BD %*% t(BD)
       Cinvsqrt = B %*% diag(1 / diag(D)) %*% t(B) # update C^-1/2
 
       callMonitor(monitor, "step")
 
       # escape flat fitness values
       if (fitn.ordered[1L] == fitn.ordered[ceiling(0.7 * lambda)]) {
-        sigma = sigma * exp(0.2 + c.sigma / damps)
+        sigma = sigma * exp(0.2 + cs / ds)
         if (!is.null(monitor)) {
           warningf("Flat fitness values; increasing mutation step-size. Consider reformulating the objective!")
         }

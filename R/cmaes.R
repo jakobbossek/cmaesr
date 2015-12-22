@@ -247,7 +247,7 @@ cmaes = function(
       fitn.ordered = fitn[fitn.ordered.idx]
 
       # update best solution so far
-      valid = (penalties <= 1)
+      valid = (penalties == 0)
       if (any(valid)) {
         min.valid.idx = which.min(fitn.repaired[valid])
         if (fitn.repaired[valid][min.valid.idx] < best.fitness) {

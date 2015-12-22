@@ -108,23 +108,23 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
   fids = 1:24
   dims = 2
   lambda = 200L
-  tol = 0.05
+  tol = 0.5
   max.iters = 200L
 
   for (fid in fids) {
     for (dim in dims) {
       # skip the hardest (very multimodal) functions
-      if (fid %in% c(4, 5, 16, 23, 24)) {
+      if (fid %in% c(24)) {
         next
       }
-      #lambda2 =  ifelse (fid %in% c(4, 5, 16, 23, 24), lambda * 4, lambda)
+      lambda2 =  ifelse (fid %in% c(4, 5, 16, 23, 24), lambda * 4, lambda)
       fn = makeBBOBFunction(fid = fid, iid = 1L, dimension = dim)
       par.set = getParamSet(fn)
       opt = getGlobalOptimum(fn)
       lb = getLower(par.set)[1L]; ub = getUpper(par.set)[1L]
       control = list(
         sigma = (ub - lb) / 2,
-        lambda = lambda,
+        lambda = lambda2,
         stop.ons = c(list(stopOnMaxIters(max.iters)), getDefaultStoppingConditions())
       )
 
@@ -161,4 +161,29 @@ test_that("IPOP-CMA-ES works", {
   expect_true(is.numeric(res$best.fitness))
   expect_true(is.integer(res$n.restarts))
   expect_equal(res$n.restarts, max.restarts)
+})
+
+test_that("CMA-ES finds optimum even if it is located on the edge of the feasible region", {
+  tol = 0.01
+
+  # generate sphere function with slightly modified parameter set (optimum on the border)
+  fn = makeSingleObjectiveFunction(
+    name = "Evil Sphere",
+    fn = function(x) {
+      if (x[1L] < 0) -(sum(x)^2) else sum(x)^2
+    },
+    par.set =  makeNumericParamSet(
+      len = 2L,
+      id = "x",
+      lower = c(0, -5.12),
+      upper = c(5.12, 5.12),
+      vector = TRUE
+    ),
+    global.opt.param = c(0, 0),
+    global.opt.value = 0
+  )
+
+  res = cmaes(fn, monitor = NULL)
+  expect_true(abs(res$best.fitness - getGlobalOptimum(fn)$value) < tol,
+    info = sprintf("Did not find optimum on the ridge of feasible space"))
 })

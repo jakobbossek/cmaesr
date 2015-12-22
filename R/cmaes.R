@@ -217,16 +217,27 @@ cmaes = function(
       iter = iter + 1L
 
       # create new population of search points
-  		z = matrix(rnorm(n * lambda), ncol = lambda) # ~ N(0, I)
-      y = BD %*% z # ~ N(0, C)
-      x = m + sigma * y # ~ N(m, sigma^2 C)
+  		arz = matrix(rnorm(n * lambda), ncol = lambda) # ~ N(0, I)
+      ary = BD %*% arz # ~ N(0, C)
+      arx = m + sigma * ary # ~ N(m, sigma^2 C)
 
-      # compute fitness values (each idividual is a column of x)
-      fitn = if (isVectorized(objective.fun)) {
-        objective.fun(x)
+      # Here we apply a penalization of violated bounds
+      arx.repaired = ifelse(arx < lb, lb, ifelse(arx > ub, ub, arx))
+
+      # Prepare penalization based on distance to repaired points (see Eq. 51)
+      penalty.alpha = 1L
+      penalties = penalty.alpha * colSums((arx - arx.repaired)^2)
+      penalties[is.infinite(penalties)] = .Machine$double.max / 2
+
+      # compute fitness values of repaired points
+      fitn.repaired = if (isVectorized(objective.fun)) {
+        objective.fun(arx.repaired)
       } else {
-        apply(x, 2L, function(xx) objective.fun(xx))
+        apply(arx.repaired, 2L, function(x) objective.fun(x))
       }
+
+      # apply penalization (see Eq. 51)
+      fitn = fitn.repaired + penalties
 
       # update evaluation
   		n.evals = n.evals + lambda
@@ -236,20 +247,24 @@ cmaes = function(
       fitn.ordered = fitn[fitn.ordered.idx]
 
       # update best solution so far
-      if (fitn.ordered[1L] < best.fitness) {
-        best.fitness = fitn.ordered[1L]
-        best.param = x[, fitn.ordered.idx[1L], drop = TRUE]
+      valid = (penalties <= 1)
+      if (any(valid)) {
+        min.valid.idx = which.min(fitn.repaired[valid])
+        if (fitn.repaired[valid][min.valid.idx] < best.fitness) {
+          best.fitness = fitn.repaired[valid][min.valid.idx]
+          best.param = arx[, valid, drop = FALSE][, min.valid.idx]
+        }
       }
 
       # update mean value / center of mass
       new.pop.idx = fitn.ordered.idx[1:mu]
-      x.best = x[, new.pop.idx, drop = FALSE]
+      x.best = arx[, new.pop.idx, drop = FALSE]
       m.old = m
       m = drop(x.best %*% weights)
 
-      y.best = y[, new.pop.idx, drop = FALSE]
+      y.best = ary[, new.pop.idx, drop = FALSE]
       y.w = drop(y.best %*% weights)
-      z.best = z[, new.pop.idx, drop = FALSE]
+      z.best = arz[, new.pop.idx, drop = FALSE]
       z.w = drop(z.best %*% weights)
 
       # log population
@@ -274,7 +289,6 @@ cmaes = function(
       B = e$vectors
       D = diag(sqrt(e$values))
       BD = B %*% D
-      #C = BD %*% t(BD)
       Cinvsqrt = B %*% diag(1 / diag(D)) %*% t(B) # update C^-1/2
 
       callMonitor(monitor, "step")

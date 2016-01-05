@@ -9,6 +9,9 @@
 #' black box optimization [2, 3]. It features a flexible system of stopping conditions
 #' and enables restarts [1], which can be triggered by arbitrary stopping conditions.
 #'
+#' @note Internally a check for an indefinite covariance matrix is always performed, i.e.,
+#' this stopping conditions is always prepended internally to the list of stopping conditions.
+#'
 #' You may pass additional parameters to the CMA-ES via the \code{control} argument.
 #' This argument must be a named list. The following control elements will be considered
 #' by the CMA-ES implementation:
@@ -119,6 +122,9 @@ cmaes = function(
     stopf("There must be at least one stopping condition!")
   }
   assertList(stop.ons, min.len = 1L, types = "cma_stopping_condition")
+
+  # alwas check for indefinit covariance matrix first
+  stop.ons = c(list(stopOnIndefCovMat()), stop.ons)
 
   # restart mechanism (IPOP-CMA-ES)
   restart.triggers = getCMAESParameter(control, "restart.triggers", character(0L))
@@ -249,6 +255,8 @@ cmaes = function(
       # update best solution so far
       valid = (penalties == 0)
       if (any(valid)) {
+        #stopifnot(all(fitn[valid] == fitn.repaired[valid]))
+        #stopifnot(all(arx[, valid, drop = FALSE] == arx.repaired[, valid, drop = FALSE]))
         min.valid.idx = which.min(fitn.repaired[valid])
         if (fitn.repaired[valid][min.valid.idx] < best.fitness) {
           best.fitness = fitn.repaired[valid][min.valid.idx]

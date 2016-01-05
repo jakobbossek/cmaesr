@@ -19,7 +19,6 @@ Stop on maximal number of iterations.
 }
 \seealso{
 Other stopping.conditions: \code{\link{stopOnCondCov}},
-  \code{\link{stopOnIndefCovMat}},
   \code{\link{stopOnNoEffectAxis}},
   \code{\link{stopOnNoEffectCoord}},
   \code{\link{stopOnOptParam}},

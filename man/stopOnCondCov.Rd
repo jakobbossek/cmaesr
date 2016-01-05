@@ -19,8 +19,7 @@ Stop if condition number of covariance matrix exceeds
 tolerance value.
 }
 \seealso{
-Other stopping.conditions: \code{\link{stopOnIndefCovMat}},
-  \code{\link{stopOnMaxIters}},
+Other stopping.conditions: \code{\link{stopOnMaxIters}},
   \code{\link{stopOnNoEffectAxis}},
   \code{\link{stopOnNoEffectCoord}},
   \code{\link{stopOnOptParam}},

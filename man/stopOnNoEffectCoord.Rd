@@ -15,7 +15,6 @@ coordinate does not change mean value.
 }
 \seealso{
 Other stopping.conditions: \code{\link{stopOnCondCov}},
-  \code{\link{stopOnIndefCovMat}},
   \code{\link{stopOnMaxIters}},
   \code{\link{stopOnNoEffectAxis}},
   \code{\link{stopOnOptParam}},

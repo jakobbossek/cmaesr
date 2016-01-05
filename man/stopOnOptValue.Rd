@@ -22,7 +22,6 @@ Stop if best solution is close to optimal objective value.
 }
 \seealso{
 Other stopping.conditions: \code{\link{stopOnCondCov}},
-  \code{\link{stopOnIndefCovMat}},
   \code{\link{stopOnMaxIters}},
   \code{\link{stopOnNoEffectAxis}},
   \code{\link{stopOnNoEffectCoord}},

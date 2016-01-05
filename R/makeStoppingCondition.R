@@ -50,6 +50,9 @@ checkStoppingConditions = function(stop.ons, envir = parent.frame()) {
     if (shouldStop(stop.on, envir = envir)) {
       stop.msgs = c(stop.msgs, stop.on$message)
       codes = c(codes, stop.on$code)
+      # since some stopping conditions need a "correct" covariance matrix
+      # we stop here if the first condition is met (infefCovMat is first)
+      break
     }
   }
   return(list(stop.msgs = stop.msgs, codes = codes))
@@ -65,7 +68,6 @@ checkStoppingConditions = function(stop.ons, envir = parent.frame()) {
 getDefaultStoppingConditions = function() {
   return(
     list(
-      stopOnIndefCovMat(),
       stopOnTolX(),
       stopOnNoEffectAxis(),
       stopOnNoEffectCoord(),

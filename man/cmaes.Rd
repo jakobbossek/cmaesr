@@ -37,6 +37,10 @@ Matrix Adaption - Evolution Strategy (CMA-ES).
 This a pure R implementation of the popular CMA-ES optimizer for numeric
 black box optimization [2, 3]. It features a flexible system of stopping conditions
 and enables restarts [1], which can be triggered by arbitrary stopping conditions.
+}
+\note{
+Internally a check for an indefinite covariance matrix is always performed, i.e.,
+this stopping conditions is always prepended internally to the list of stopping conditions.
 
 You may pass additional parameters to the CMA-ES via the \code{control} argument.
 This argument must be a named list. The following control elements will be considered

@@ -23,7 +23,6 @@ some tolerance value.
 }
 \seealso{
 Other stopping.conditions: \code{\link{stopOnCondCov}},
-  \code{\link{stopOnIndefCovMat}},
   \code{\link{stopOnMaxIters}},
   \code{\link{stopOnNoEffectAxis}},
   \code{\link{stopOnNoEffectCoord}},

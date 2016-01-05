@@ -15,7 +15,6 @@ direction does not change mean value.
 }
 \seealso{
 Other stopping.conditions: \code{\link{stopOnCondCov}},
-  \code{\link{stopOnIndefCovMat}},
   \code{\link{stopOnMaxIters}},
   \code{\link{stopOnNoEffectCoord}},
   \code{\link{stopOnOptParam}},

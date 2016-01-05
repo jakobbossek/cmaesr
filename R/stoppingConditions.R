@@ -20,20 +20,21 @@ stopOnMaxIters = function(max.iter = 100L) {
   ))
 }
 
-#' @title Stopping condition: indefinite covariance matrix.
-#'
-#' @description Stop if covariance matrix is not positive definite anymore.
-#'
-#' @return [\code{cma_stopping_condition}]
-#' @family stopping conditions
-#' @export
+# @title Stopping condition: indefinite covariance matrix.
+#
+# @description Stop if covariance matrix is not positive definite anymore.
+#
+# @return [\code{cma_stopping_condition}]
+# @family stopping conditions
+#NOTE: this one is not exported. However, it is always prepended to the list of
+# stopping conditions, since
 stopOnIndefCovMat = function() {
   return(makeStoppingCondition(
     name = "indefCovMat",
     message = "Covariance matrix is not numerically positive definite.",
     stop.fun = function(envir = parent.frame()) {
       e.values = envir$e$values
-      return(any(e.values <= sqrt(.Machine$double.eps) * abs(e.values[1L])))
+      return(any(is.na(e.values)) || any(e.values <= sqrt(.Machine$double.eps) * abs(e.values[1L])))
     }
   ))
 }

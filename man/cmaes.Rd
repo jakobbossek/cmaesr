@@ -55,7 +55,7 @@ by the CMA-ES implementation:
   instead of leaving the main loop. Default is the empty character vector, i.e., restart is not triggered.}
   \item{max.restarts [\code{integer(1)}]}{Maximal number of restarts. Default is 0. If set
   to >= 1, the CMA-ES is restarted with a higher population size if one of the
-  \code{restart.triggers} is activated.}
+  stoppping conditions is defined as a restart trigger \code{restart.triggers} is activated.}
   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}})}.

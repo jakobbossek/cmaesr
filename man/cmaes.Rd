@@ -68,6 +68,7 @@ by the CMA-ES implementation:
   Default is 2.}
   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}}).}
+  \item{log.population [\code{logical(1L)}]}{Should each population be stored? Default is \code{FALSE}.}
 }
 }
 \note{

@@ -28,6 +28,7 @@
 #'   Default is 2.}
 #'   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
 #'   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}}).}
+#'   \item{log.population [\code{logical(1L)}]}{Should each population be stored? Default is \code{FALSE}.}
 #' }
 #'
 #' @note Internally a check for an indefinite covariance matrix is always performed, i.e.,
@@ -166,6 +167,8 @@ cmaes = function(
 	m = start.point
 
   # logs
+  log.population = getCMAESParameter(control, "log.population", FALSE)
+  assertFlag(log.population, na.ok = FALSE)
   population.trace = list()
 
   # init some termination criteria stuff
@@ -290,7 +293,9 @@ cmaes = function(
       z.w = drop(z.best %*% weights)
 
       # log population
-      population.trace[[iter]] = x.best
+      if (log.population) {
+        population.trace[[iter]] = x.best
+      }
 
   		# Update evolution path with cumulative step-size adaption (CSA) / path length control
       # For an explanation of the last factor see appendix A in https://www.lri.fr/~hansen/cmatutorial.pdf

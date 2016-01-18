@@ -5,31 +5,33 @@
 #' Matrix Adaption - Evolution Strategy (CMA-ES).
 #'
 #' @details
-#' This a pure R implementation of the popular CMA-ES optimizer for numeric
+#' This is a pure R implementation of the popular CMA-ES optimizer for continuous
 #' black box optimization [2, 3]. It features a flexible system of stopping conditions
-#' and enables restarts [1], which can be triggered by arbitrary stopping conditions.
-#'
-#' @note Internally a check for an indefinite covariance matrix is always performed, i.e.,
-#' this stopping conditions is always prepended internally to the list of stopping conditions.
+#' and enables restarts [1], which can be triggered by arbitrary stopping conditions
+#' and can lead to superior performance on multimodal problems.
 #'
 #' You may pass additional parameters to the CMA-ES via the \code{control} argument.
 #' This argument must be a named list. The following control elements will be considered
 #' by the CMA-ES implementation:
 #' \describe{
-#'   \item{lambda [\code{integer(1)}]}{Number of offspring generaded in each generation.}
+#'   \item{lambda [\code{integer(1)}]}{Number of offspring generated in each generation.}
 #'   \item{mu [\code{integer(1)}]}{Number of individuals in each population. Defaults to \eqn{\lfloor \lambda / 2\rfloor}.}
 #'   \item{weights [\code{numeric}]}{Numeric vector of positive weights.}
-#'   \item{sigma [\code{numeric(1)}]}{Initial step-size.}
+#'   \item{sigma [\code{numeric(1)}]}{Initial step-size. Default is 0.5.}
 #'   \item{restart.triggers [\code{character}]}{List of stopping condition codes / short names (see
 #'   \code{\link{makeStoppingCondition}}). All stopping conditions which are placed in this vector do trigger a restart
 #'   instead of leaving the main loop. Default is the empty character vector, i.e., restart is not triggered.}
 #'   \item{max.restarts [\code{integer(1)}]}{Maximal number of restarts. Default is 0. If set
-#'   to >= 1, the CMA-ES is restarted with a higher population size if one of the
-#'   stoppping conditions is defined as a restart trigger \code{restart.triggers} is activated.}
-#'   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.}
+#'   to >= 1, the CMA-ES is restarted with a higher population size if at least one of the
+#'   stoppping conditions is defined as a restart trigger \code{restart.triggers}.}
+#'   \item{restart.multiplier [\code{numeric(1)}]}{Factor which is used to increase the population size after restart.
+#'   Default is 2.}
 #'   \item{stop.ons [\code{list}]}{List of stopping conditions. The default is to stop after 10 iterations or after a
-#'   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}})}.
+#'   kind of a stagnation (see \code{\link{getDefaultStoppingConditions}}).}
 #' }
+#'
+#' @note Internally a check for an indefinite covariance matrix is always performed, i.e.,
+#' this stopping condition is always prepended internally to the list of stopping conditions.
 #'
 #' @references
 #' [1] Auger and Hansen (2005). A Restart CMA Evolution Strategy With Increasing
@@ -45,20 +47,31 @@
 #' @keywords optimize
 #'
 #' @param objective.fun [\code{smoof_function}]\cr
-#'   Numerical objective function of type \code{smoof_function}. The function
-#'   must expect a list of numerical values and return a scaler numerical value.
+#'   Continuous objective function of type \code{smoof_function}. The function
+#'   must expect a vector of numerical values and return a scaler numerical value.
 #' @param start.point [\code{numeric}]\cr
 #'   Initial solution vector. If \code{NULL}, one is generated randomly within the
 #'   box constraints offered by the paramter set of the objective function.
 #'   Default is \code{NULL}.
 #' @param monitor [\code{cma_monitor}]\cr
 #'   Monitoring object.
-#'   Default is \code{\link{makeSimpleMonitor}}.
+#'   Default is \code{\link{makeSimpleMonitor}}, which produces a console output.
 #' @param control [\code{list}]\cr
 #'   Futher paramters for the CMA-ES. See the details section for more in-depth
 #'   information. Stopping conditions are also defined here.
 #'   By default only some stopping conditions are passed. See \code{\link{getDefaultStoppingConditions}}.
-#' @return [\code{CMAES_result}] Result object.
+#' @return [\code{cma_result}] Result object. Internally a list with the following
+#'   components:
+#'   \describe{
+#'     \item{par.set [\code{\link[ParamHelpers]{ParamSet}}]}{Parameter set of the objective function.}
+#'     \item{best.param [\code{numeric}]}{Final best parameter setting.}
+#'     \item{best.fitness [\code{numeric(1L)}]}{Fitness value of the \code{best.param}}.
+#'     \item{n.evals [\code{integer(1L)}]}{Number of function evaluations performed.}
+#'     \item{past.time [\code{integer(1L)}]}{Running time of the optimization in seconds.}
+#'     \item{n.restarts [\code{integer(1L)}]}{Number of restarts.}
+#'     \item{population.trace [\code{list}]}{Trace of population.}
+#'     \item{message [\code{character(1L)}]}{Message generated by stopping condition.}
+#'   }
 #'
 #' @examples
 #' # generate objective function from smoof package
@@ -67,7 +80,8 @@
 #'   fn,
 #'   monitor = NULL,
 #'   control = list(
-#'     sigma = 1.5, lambda = 40,
+#'     sigma = 1.5,
+#'     lambda = 40,
 #'     stop.ons = c(list(stopOnMaxIters(100L)), getDefaultStoppingConditions())
 #'   )
 #' )

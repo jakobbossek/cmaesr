@@ -1,8 +1,8 @@
-#' @title Covariance-Matrix-Adaption
+#' @title Covariance-Matrix-Adaptation
 #'
 #' @description
 #' Performs non-linear, non-convex optimization by means of the Covariance
-#' Matrix Adaption - Evolution Strategy (CMA-ES).
+#' Matrix Adaptation - Evolution Strategy (CMA-ES).
 #'
 #' @details
 #' This is a pure R implementation of the popular CMA-ES optimizer for continuous
@@ -219,7 +219,7 @@ cmaes = function(
     cs = (mu.eff + 2) / (n + mu.eff + 5)
     ds = 1 + 2 * max(0, sqrt((mu.eff - 1) / (n + 1)) - 1) + cs # damping factor
 
-    # covariance matrix adaption parameters
+    # covariance matrix Adaptation parameters
     cc = (4 + mu.eff / n) / (n + 4 + 2 * mu.eff / n)
     c1 = 2 / ((n + 1.3)^2 + mu.eff)
     alpha.mu = 2L
@@ -299,7 +299,7 @@ cmaes = function(
         population.trace[[iter]] = x.best
       }
 
-  		# Update evolution path with cumulative step-size adaption (CSA) / path length control
+  		# Update evolution path with cumulative step-size Adaptation (CSA) / path length control
       # For an explanation of the last factor see appendix A in https://www.lri.fr/~hansen/cmatutorial.pdf
       ps = (1 - cs) * ps + sqrt(cs * (2 - cs) * mu.eff) * (Cinvsqrt %*% y.w)
   		h.sigma = as.integer(norm2(ps) / sqrt(1 - (1 - cs)^(2 * (iter + 1))) < chi.n * (1.4 + 2 / (n + 1)))

@@ -1,4 +1,4 @@
-# cmaesr: Covariance Matrix Adaption - Evolution Strategy in R
+# cmaesr: Covariance Matrix Adaptation - Evolution Strategy in R
 
 [![CRAN Status Badge](http://www.r-pkg.org/badges/version/cmaesr)](http://cran.r-project.org/web/packages/cmaesr)
 [![CRAN Downloads](http://cranlogs.r-pkg.org/badges/cmaesr)](http://cran.rstudio.com/web/packages/cmaesr/index.html)
@@ -8,7 +8,7 @@
 
 ## Description
 
-The *cmaesr* package implements the popular [Covariance Matrix Adaption - Evolution Strategy](https://www.lri.fr/~hansen/cmatutorial.pdf) [2, 3] optimizer for numerical optimization problems in pure R. The main features of the package are:
+The *cmaesr* package implements the popular [Covariance Matrix Adaptation - Evolution Strategy](https://www.lri.fr/~hansen/cmatutorial.pdf) [2, 3] optimizer for numerical optimization problems in pure R. The main features of the package are:
 * Extensible S3 based system for stopping conditions.
 * Possibility to enable [restarting](https://www.google.de/url?sa=t&rct=j&q=&esrc=s&source=web&cd=4&cad=rja&uact=8&ved=0CDgQFjADahUKEwiHyr2B3-fIAhVEOBoKHZFPBgs&url=https%3A%2F%2Fwww.lri.fr%2F~hansen%2Fcec2005ipopcmaes.pdf&usg=AFQjCNGwtYnwiRizaVZzbrfeXZjj-DYLtg&sig2=kMpEze_3Qe965UZ08wl-sw&bvm=bv.106130839,d.bGg) [1] with flexible declaration of restart-triggering stopping conditions.
 * Nice visualization of 2D optimization runs for, e.g., teaching purposes.

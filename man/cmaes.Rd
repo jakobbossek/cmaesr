@@ -2,7 +2,7 @@
 % Please edit documentation in R/cmaes.R
 \name{cmaes}
 \alias{cmaes}
-\title{Covariance-Matrix-Adaption}
+\title{Covariance-Matrix-Adaptation}
 \usage{
 cmaes(objective.fun, start.point = NULL, monitor = makeSimpleMonitor(),
   control = list(stop.ons = c(getDefaultStoppingConditions())))
@@ -42,7 +42,7 @@ By default only some stopping conditions are passed. See \code{\link{getDefaultS
 }
 \description{
 Performs non-linear, non-convex optimization by means of the Covariance
-Matrix Adaption - Evolution Strategy (CMA-ES).
+Matrix Adaptation - Evolution Strategy (CMA-ES).
 }
 \details{
 This is a pure R implementation of the popular CMA-ES optimizer for continuous

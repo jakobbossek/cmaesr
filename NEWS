@@ -1,0 +1,13 @@
+cmaesr v1.0.1.9000 (Release data: xxxx-xx-xx)
+============
+
+cmaesr v1.0.1 (Release date: 2015-05-19):
+============
+
+* Bugfix: remove unnecessary check for weights summing up to one causing an error
+  on Sparc Solaris and Linux machines without long double
+
+cmaesr v1.0 (Release date: 2015-05-19):
+==========
+
+* First submission to CRAN.

@@ -206,9 +206,6 @@ cmaes = function(
       stopf("All weights need to be positive, but there are %i negative ones.", sum(which(weights < 0)))
     }
     weights = weights / sum(weights)
-    if (!(sum(weights) - 1.0) < .Machine$double.eps) {
-      stopf("All 'weights' need to sum up to 1, but actually the sum is %f", sum(weights))
-    }
 
     # variance-effectiveness / variance effective selection mass of sum w_i x_i
     mu.eff = sum(weights)^2 / sum(weights^2) # chosen such that mu.eff ~ lambda/4

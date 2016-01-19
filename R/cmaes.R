@@ -205,6 +205,11 @@ cmaes = function(
     if (any(weights < 0)) {
       stopf("All weights need to be positive, but there are %i negative ones.", sum(which(weights < 0)))
     }
+    if (length(weights) != mu) {
+      stopf("You need to pass %i 'weights', but you passed %i.", mu, length(weights))
+    }
+
+    # normalize weights
     weights = weights / sum(weights)
 
     # variance-effectiveness / variance effective selection mass of sum w_i x_i

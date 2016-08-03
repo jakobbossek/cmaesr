@@ -8,7 +8,6 @@ os:
 
 r_github_packages:
   - jimhester/covr
-  - jakobbossek/smoof
 
 after_success:
   - Rscript -e 'library(covr);coveralls()'

@@ -14,7 +14,7 @@ test_that("CMA-ES finds optimum of some BBOB functions", {
   for (generator in fun.generators) {
     for (dim in dims) {
       fn = do.call(generator, list(dim))
-      par.set = getParamSet(fn)
+      par.set = ParamHelpers::getParamSet(fn)
       opt = getGlobalOptimum(fn)
       lb = getLower(par.set)[1L]; ub = getUpper(par.set)[1L]
 
@@ -119,7 +119,7 @@ test_that("CMA-ES computes reasonanable results on noiseless 2D BBOB test set", 
       }
       lambda2 =  ifelse (fid %in% c(4, 5, 16, 23, 24), lambda * 4, lambda)
       fn = makeBBOBFunction(fid = fid, iid = 1L, dimension = dim)
-      par.set = getParamSet(fn)
+      par.set = ParamHelpers::getParamSet(fn)
       opt = getGlobalOptimum(fn)
       lb = getLower(par.set)[1L]; ub = getUpper(par.set)[1L]
       control = list(
@@ -148,7 +148,7 @@ test_that("IPOP-CMA-ES works", {
   max.iters = 5000L
 
   fn = makeAckleyFunction(2L)
-  par.set = getParamSet(fn)
+  par.set = ParamHelpers::getParamSet(fn)
   lb = getLower(par.set); ub = getUpper(par.set)
   control = list(
     sigma = (ub[1L] - lb[1L]) / 2,

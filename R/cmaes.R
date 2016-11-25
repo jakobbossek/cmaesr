@@ -144,8 +144,6 @@ cmaes = function(
   # restart mechanism (IPOP-CMA-ES)
   restart.triggers = getCMAESParameter(control, "restart.triggers", character(0L))
   stop.ons.names = sapply(stop.ons, function(stop.on) stop.on$code)
-  print(stop.ons.names)
-  print(restart.triggers)
   if (!isSubset(restart.triggers, stop.ons.names)) {
     stopf("Only codes / short names of active stopping conditions allowed as restart trigger, but '%s' are no stopping conditions.", collapse(setdiff(restart.triggers, stop.ons.names), sep = ", "))
   }

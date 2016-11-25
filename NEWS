@@ -1,5 +1,7 @@
-cmaesr v1.0.1.9000 (Release data: xxxx-xx-xx)
+cmaesr v1.0.3 (Release data: 2016-11-26)
 ============
+
+* Bugfix: remove debug stdout messages
 
 cmaesr v1.0.1 (Release date: 2015-05-19):
 ============
